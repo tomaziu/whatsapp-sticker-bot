@@ -29,6 +29,7 @@ const logger = pino({ level: "warn" });
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
+const processed = new Set();
 
 function checkFfmpeg() {
   const { execSync } = require("child_process");
@@ -116,6 +117,14 @@ function hasStickerCommand(msg) {
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
+
+  const msgId = msg.key.id;
+  if (processed.has(msgId)) return;
+  processed.add(msgId);
+  if (processed.size > 500) {
+    const arr = [...processed];
+    arr.splice(0, 250).forEach((id) => processed.delete(id));
+  }
 
   const from = msg.key.remoteJid;
   const m = msg.message;
