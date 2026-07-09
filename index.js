@@ -196,7 +196,7 @@ async function startBot() {
   const { version } = await fetchLatestBaileysVersion();
   console.log(`[Info] WhatsApp Web v${version.join(".")}`);
 
-  startServer(process.env.PORT || config.qrServerPort || 3000);
+  startServer(config.qrServerPort || 3000);
 
   const sock = makeWASocket({
     version,
