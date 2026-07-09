@@ -115,7 +115,7 @@ function hasStickerCommand(msg) {
 
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
-  if (!msg || msg.key.fromMe) return;
+  if (!msg) return;
 
   const from = msg.key.remoteJid;
   const m = msg.message;
