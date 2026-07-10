@@ -29,6 +29,7 @@ const logger = pino({ level: "silent" });
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
+const seen = new Map(); // msgId -> timestamp
 
 // ─── Verifica ffmpeg ───────────────────────────────────────────────
 function checkFfmpeg() {
@@ -110,6 +111,19 @@ load();setInterval(load,2000);
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
+
+  // Deduplicação: ignora se a mesma mensagem chegou nos últimos 5 segundos
+  const id = msg.key.id;
+  const now = Date.now();
+  if (seen.has(id)) {
+    const prev = seen.get(id);
+    if (now - prev < 5000) return;
+  }
+  seen.set(id, now);
+  // Limpa IDs antigos
+  for (const [k, v] of seen) {
+    if (now - v > 10000) seen.delete(k);
+  }
 
   const from = msg.key.remoteJid;
   const m = msg.message;
