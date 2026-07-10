@@ -132,6 +132,11 @@ async function processMessage(sock, messageUpdate) {
 
   const isImage = !!m.imageMessage;
   const isVideo = !!m.videoMessage;
+  const caption = m.imageMessage?.caption || m.videoMessage?.caption || "";
+
+  if (isImage || isVideo) {
+    console.log(`[IMG] De: ${from} | Caption: "${caption}" | fromMe: ${msg.key.fromMe}`);
+  }
 
   if (!hasStickerCommand(msg)) return;
 
@@ -155,7 +160,7 @@ async function processMessage(sock, messageUpdate) {
     await sock.sendMessage(from, {
       sticker,
       mimetype: "image/webp",
-      packname: "bot do t00m4ziow",
+      packname: "Criado por Thomaz",
       author: "bot do t00m4ziow",
     });
 
