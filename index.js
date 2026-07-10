@@ -24,12 +24,11 @@ const fs = require("fs");
 const config = require("./config");
 const { imageToSticker, videoToSticker } = require("./lib/stickerConverter");
 
-const logger = pino({ level: "warn" });
+const logger = pino({ level: "silent" });
 
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
-const processedMessages = new Set(); // Evita enviar figurinha duplicada
 
 // ─── Verifica ffmpeg ───────────────────────────────────────────────
 function checkFfmpeg() {
@@ -107,58 +106,27 @@ load();setInterval(load,2000);
   });
 }
 
-// ─── Detecta comando de figurinha ──────────────────────────────────
-function hasStickerCommand(msg) {
-  const caption =
-    msg.message?.imageMessage?.caption ||
-    msg.message?.videoMessage?.caption ||
-    "";
-  const t = caption.trim().toLowerCase();
-  return t === config.commandPrefix || t === config.commandPrefixAlt;
-}
-
 // ─── Processa mensagens ────────────────────────────────────────────
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
 
-  // Deduplicação — ignora mensagens já processadas
-  const msgId = msg.key.id;
-  if (processedMessages.has(msgId)) return;
-  processedMessages.add(msgId);
-  // Limpa IDs antigos para não acumular memória
-  if (processedMessages.size > 500) {
-    const arr = [...processedMessages];
-    arr.splice(0, 250).forEach((id) => processedMessages.delete(id));
-  }
-
   const from = msg.key.remoteJid;
   const m = msg.message;
   if (!m) return;
 
-  // Log toda mensagem recebida para debug
-  const type = m.imageMessage ? "imagem" : m.videoMessage ? "video" : m.conversation ? "texto" : "outro";
-  console.log(`[MSG] De: ${from} | Tipo: ${type} | fromMe: ${msg.key.fromMe}`);
-
-  // Aceita mensagens de outros E de você mesmo (autochat)
   const isImage = !!m.imageMessage;
   const isVideo = !!m.videoMessage;
+  if (!isImage && !isVideo) return;
 
-  if (!hasStickerCommand(msg)) {
-    if (isImage || isVideo) {
-      console.log(`[MSG] Mídia sem comando ".fig" — ignorando`);
-    }
-    return;
-  }
+  const caption =
+    m.imageMessage?.caption ||
+    m.videoMessage?.caption ||
+    "";
+  const t = caption.trim().toLowerCase();
+  const isSticker = t === config.commandPrefix || t === config.commandPrefixAlt;
 
-  if (!isImage && !isVideo) {
-    await sock.sendMessage(from, {
-      text: 'Envie imagem ou GIF/vídeo com ".fig" na legenda.',
-    });
-    return;
-  }
-
-  console.log(`[+] ${isImage ? "Imagem" : "Video"} de ${from}`);
+  if (!isSticker) return;
 
   try {
     await sock.sendMessage(from, { react: { text: "⏳", key: msg.key } });
@@ -171,16 +139,13 @@ async function processMessage(sock, messageUpdate) {
     await sock.sendMessage(from, {
       sticker,
       mimetype: "image/webp",
-      packname: "bot do t00m4ziow",
+      packname: "Criado por Thomaz",
       author: "bot do t00m4ziow",
     });
 
-    console.log(`[OK] Figurinha enviada para ${from}`);
+    console.log(`[OK] Figurinha criada!`);
   } catch (err) {
-    console.error(`[ERRO] ${err.message}`);
-    await sock.sendMessage(from, {
-      text: `Erro ao converter: ${err.message}`,
-    });
+    console.log(`[ERRO] ${err.message}`);
   }
 }
 
