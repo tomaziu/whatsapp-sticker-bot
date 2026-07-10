@@ -124,6 +124,32 @@ async function processMessage(sock, messageUpdate) {
   const m = msg.message;
   if (!m) return;
 
+  // Comando .menu
+  const text = m.conversation || m.extendedTextMessage?.text || "";
+  if (text.trim().toLowerCase() === ".menu") {
+    await sock.sendMessage(from, {
+      text: `╭─❍ *BotFig* ❍─╮
+
+Olá! Eu crio figurinhas e gifs animados no WhatsApp.
+
+📌 *COMANDOS*
+
+.menu
+  → mostra este menu
+.fig (em vídeo/gif)
+  → transforma um vídeo curto ou gif em figurinha animada
+  → responda o vídeo/gif com .fig
+.fig (em imagem)
+  → transforma a imagem em figurinha 512x512
+
+💡 *DICA*
+Quanto mais quadrada a imagem, melhor fica a figurinha.
+
+╰─❍───────❍─╯`,
+    });
+    return;
+  }
+
   const isImage = !!m.imageMessage;
   const isVideo = !!m.videoMessage;
   if (!isImage && !isVideo) return;
