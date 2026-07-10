@@ -211,7 +211,11 @@ async function startBot() {
         currentQR = null;
         startBot();
       } else {
-        console.log("[!] Deslogado. Apague a pasta session/ e reinicie.");
+        // Deslogado — apaga session automaticamente
+        try {
+          fs.rmSync(config.paths.authInfo, { recursive: true, force: true });
+        } catch {}
+        console.log("[!] Sessão apagada. Reinicie o bot.");
         currentQR = null;
         status = "error";
       }
