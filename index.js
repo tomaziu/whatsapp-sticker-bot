@@ -29,6 +29,7 @@ const logger = pino({ level: "silent" });
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
+const processed = new Set();
 
 // ─── Verifica ffmpeg ───────────────────────────────────────────────
 function checkFfmpeg() {
@@ -110,6 +111,14 @@ load();setInterval(load,2000);
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
+
+  const id = msg.key.id;
+  if (processed.has(id)) return;
+  processed.add(id);
+  if (processed.size > 500) {
+    const arr = [...processed];
+    arr.splice(0, 250).forEach((i) => processed.delete(i));
+  }
 
   const from = msg.key.remoteJid;
   const m = msg.message;
