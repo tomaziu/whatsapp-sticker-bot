@@ -12,7 +12,7 @@ module.exports = {
     maxSizeKB: 500,        // Tamanho máximo em KB
     maxWidth: 512,         // Largura máxima em pixels
     maxHeight: 512,        // Altura máxima em pixels
-    maxDurationSec: 10,    // Duração máxima de vídeos/GIFs em segundos
+    maxDurationSec: 6,     // Duração máxima de vídeos/GIFs em segundos
     defaultFps: 15,        // FPS padrão para GIFs/vídeos animados
     defaultBitrate: "200k", // Bitrate padrão para compressão de vídeo
   },
