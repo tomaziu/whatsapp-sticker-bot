@@ -20,14 +20,37 @@ const { imageToSticker, videoToSticker } = require("./lib/stickerConverter");
 // Logger silenciado — não mostra erros de criptografia do WhatsApp
 const logger = pino({ level: "silent" });
 
-// Bloqueia erros de criptografia da libsignal que aparecem no console
+// Bloqueia TODA saída de erro da libsignal
 const _origError = console.error;
+const _origWarn = console.warn;
+const _origLog = console.log;
+
+function isCryptoNoise(str) {
+  return str.includes("Bad MAC") || str.includes("Session error") ||
+    str.includes("Failed to decrypt") || str.includes("SessionEntry") ||
+    str.includes("Closing session") || str.includes("Closing open session") ||
+    str.includes("session_cipher") || str.includes("crypto.js") ||
+    str.includes("group_cipher") || str.includes("session_builder") ||
+    str.includes("doDecryptWhisperMessage") || str.includes("verifyMAC") ||
+    str.includes("decryptWithSessions") || str.includes("processTicksAndRejections") ||
+    str.includes("_asyncQueueExecutor") || str.includes("queue-job");
+}
+
 console.error = (...args) => {
-  const msg = args[0]?.toString?.() || "";
-  if (msg.includes("Bad MAC") || msg.includes("Session error") ||
-      msg.includes("Failed to decrypt") || msg.includes("SessionEntry") ||
-      msg.includes("Closing session") || msg.includes("Closing open session")) return;
+  if (args.some(a => isCryptoNoise(String(a)))) return;
   _origError(...args);
+};
+console.warn = (...args) => {
+  if (args.some(a => isCryptoNoise(String(a)))) return;
+  _origWarn(...args);
+};
+
+// Bloqueia erros写ritos diretamente no stderr
+const _origStderrWrite = process.stderr.write;
+process.stderr.write = function(chunk, ...rest) {
+  const str = typeof chunk === "string" ? chunk : chunk.toString();
+  if (isCryptoNoise(str)) return true;
+  return _origStderrWrite.call(process.stderr, chunk, ...rest);
 };
 
 let currentQR = null;
