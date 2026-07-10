@@ -135,6 +135,8 @@ async function processMessage(sock, messageUpdate) {
   const t = caption.trim().toLowerCase();
   const isSticker = t === config.commandPrefix || t === config.commandPrefixAlt;
 
+  console.log(`[MSG] Imagem recebida | Caption: "${caption}" | Comando: ${isSticker}`);
+
   if (!isSticker) return;
 
   try {
