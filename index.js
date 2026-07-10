@@ -152,6 +152,11 @@ async function processMessage(sock, messageUpdate) {
       author: "bot do t00m4ziow",
     });
 
+    const numero = from.replace(/@.*/, "").replace(/^55/, "");
+    await sock.sendMessage(from, {
+      text: `Figurinha criada para: +55${numero}`,
+    });
+
     console.log(`[OK] Figurinha criada!`);
   } catch (err) {
     console.log(`[ERRO] ${err.message}`);
