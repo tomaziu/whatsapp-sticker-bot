@@ -136,11 +136,13 @@ Olá! Eu crio figurinhas e gifs animados no WhatsApp.
 
 .menu
   → mostra este menu
-.fig (em vídeo/gif)
-  → transforma um vídeo curto ou gif em figurinha animada
-  → responda o vídeo/gif com .fig
+
 .fig (em imagem)
   → transforma a imagem em figurinha 512x512
+
+.fig (em vídeo/gif)
+  → transforma um vídeo curto ou gif em figurinha animada
+  → duração máxima: 6 segundos
 
 💡 *DICA*
 Quanto mais quadrada a imagem, melhor fica a figurinha.
