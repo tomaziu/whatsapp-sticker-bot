@@ -20,6 +20,16 @@ const { imageToSticker, videoToSticker } = require("./lib/stickerConverter");
 // Logger silenciado — não mostra erros de criptografia do WhatsApp
 const logger = pino({ level: "silent" });
 
+// Bloqueia erros de criptografia da libsignal que aparecem no console
+const _origError = console.error;
+console.error = (...args) => {
+  const msg = args[0]?.toString?.() || "";
+  if (msg.includes("Bad MAC") || msg.includes("Session error") ||
+      msg.includes("Failed to decrypt") || msg.includes("SessionEntry") ||
+      msg.includes("Closing session") || msg.includes("Closing open session")) return;
+  _origError(...args);
+};
+
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
