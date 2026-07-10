@@ -29,8 +29,9 @@ const logger = pino({ level: "warn" });
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
-const processed = new Set();
+const processedMessages = new Set(); // Evita enviar figurinha duplicada
 
+// ─── Verifica ffmpeg ───────────────────────────────────────────────
 function checkFfmpeg() {
   const { execSync } = require("child_process");
   try {
@@ -43,8 +44,9 @@ function checkFfmpeg() {
   }
 }
 
+// ─── Servidor HTTP que mostra o QR no navegador ───────────────────
 function startServer(port) {
-  if (serverStarted) return;
+  if (serverStarted) return; // Não recria o servidor nas reconexões
   serverStarted = true;
 
   const html = `<!DOCTYPE html>
@@ -105,6 +107,7 @@ load();setInterval(load,2000);
   });
 }
 
+// ─── Detecta comando de figurinha ──────────────────────────────────
 function hasStickerCommand(msg) {
   const caption =
     msg.message?.imageMessage?.caption ||
@@ -114,31 +117,39 @@ function hasStickerCommand(msg) {
   return t === config.commandPrefix || t === config.commandPrefixAlt;
 }
 
+// ─── Processa mensagens ────────────────────────────────────────────
 async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
 
+  // Deduplicação — ignora mensagens já processadas
   const msgId = msg.key.id;
-  if (processed.has(msgId)) return;
-  processed.add(msgId);
-  if (processed.size > 500) {
-    const arr = [...processed];
-    arr.splice(0, 250).forEach((id) => processed.delete(id));
+  if (processedMessages.has(msgId)) return;
+  processedMessages.add(msgId);
+  // Limpa IDs antigos para não acumular memória
+  if (processedMessages.size > 500) {
+    const arr = [...processedMessages];
+    arr.splice(0, 250).forEach((id) => processedMessages.delete(id));
   }
 
   const from = msg.key.remoteJid;
   const m = msg.message;
   if (!m) return;
 
+  // Log toda mensagem recebida para debug
+  const type = m.imageMessage ? "imagem" : m.videoMessage ? "video" : m.conversation ? "texto" : "outro";
+  console.log(`[MSG] De: ${from} | Tipo: ${type} | fromMe: ${msg.key.fromMe}`);
+
+  // Aceita mensagens de outros E de você mesmo (autochat)
   const isImage = !!m.imageMessage;
   const isVideo = !!m.videoMessage;
-  const caption = m.imageMessage?.caption || m.videoMessage?.caption || "";
 
-  if (isImage || isVideo) {
-    console.log(`[IMG] De: ${from} | Caption: "${caption}" | fromMe: ${msg.key.fromMe}`);
+  if (!hasStickerCommand(msg)) {
+    if (isImage || isVideo) {
+      console.log(`[MSG] Mídia sem comando ".fig" — ignorando`);
+    }
+    return;
   }
-
-  if (!hasStickerCommand(msg)) return;
 
   if (!isImage && !isVideo) {
     await sock.sendMessage(from, {
@@ -160,7 +171,7 @@ async function processMessage(sock, messageUpdate) {
     await sock.sendMessage(from, {
       sticker,
       mimetype: "image/webp",
-      packname: "Criado por Thomaz",
+      packname: "bot do t00m4ziow",
       author: "bot do t00m4ziow",
     });
 
@@ -173,6 +184,7 @@ async function processMessage(sock, messageUpdate) {
   }
 }
 
+// ─── Bot principal ─────────────────────────────────────────────────
 async function startBot() {
   checkFfmpeg();
 
