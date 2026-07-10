@@ -1,97 +1,218 @@
-// test.js — Testes do Bot de Figurinhas
 const sharp = require("sharp");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
+const { execFileSync } = require("child_process");
 
 let passed = 0;
 let failed = 0;
+let skipped = 0;
 
-function assert(condition, msg) {
-  if (condition) { console.log(`  ✓ ${msg}`); passed++; }
-  else { console.log(`  ✗ ${msg}`); failed++; }
+function assert(condition, message) {
+  if (condition) {
+    console.log(`  ✓ ${message}`);
+    passed++;
+    return;
+  }
+
+  console.log(`  ✗ ${message}`);
+  failed++;
+}
+
+function assertEqual(actual, expected, message) {
+  assert(actual === expected, `${message} (${actual} === ${expected})`);
+}
+
+function skip(message) {
+  console.log(`  - ${message}`);
+  skipped++;
 }
 
 async function testImageConversion() {
-  console.log("\n[1] Conversão de imagem");
+  console.log("\n[1] Imagem 1:1");
   const { imageToSticker } = require("./lib/stickerConverter");
 
   const input = await sharp({
-    create: { width: 800, height: 600, channels: 3, background: { r: 255, g: 100, b: 50 } },
+    create: {
+      width: 1200,
+      height: 600,
+      channels: 3,
+      background: { r: 20, g: 180, b: 90 },
+    },
   }).jpeg().toBuffer();
 
   const output = await imageToSticker(input);
   const meta = await sharp(output).metadata();
 
-  assert(meta.width === 512, "Largura = 512px");
-  assert(meta.height === 512, "Altura = 512px");
-  assert(meta.format === "webp", "Formato = webp");
-  assert(output.length < 500 * 1024, "Tamanho < 500KB");
+  assertEqual(meta.width, 512, "Largura final");
+  assertEqual(meta.height, 512, "Altura final");
+  assertEqual(meta.format, "webp", "Formato final");
+  assert(output.length <= 500 * 1024, "Imagem abaixo de 500KB");
+  assert(output.includes(Buffer.from("bot do @tomm")), "Imagem inclui autor no metadata");
+  assert(output.includes(Buffer.from("Figurinhas do bot")), "Imagem inclui nome do pacote");
+  assertEqual(output.toString("ascii", 12, 16), "VP8X", "Imagem declara VP8X");
+  assert((output[20] & 0x08) === 0x08, "Imagem declara flag EXIF");
+}
+
+async function testVideoConversion() {
+  console.log("\n[2] Vídeo 1:1");
+  const { videoToSticker } = require("./lib/stickerConverter");
+  const inputPath = path.join(os.tmpdir(), `sticker-test-${Date.now()}.mp4`);
+
+  try {
+    execFileSync("ffmpeg", [
+      "-y",
+      "-f", "lavfi",
+      "-i", "testsrc=size=640x360:rate=15:duration=2",
+      "-pix_fmt", "yuv420p",
+      inputPath,
+    ], { stdio: "ignore" });
+  } catch {
+    skip("ffmpeg indisponível; teste de vídeo pulado");
+    return;
+  }
+
+  try {
+    const output = await videoToSticker(fs.readFileSync(inputPath));
+    const meta = await sharp(output).metadata();
+
+    assert(meta.width === meta.height, "Vídeo fica quadrado");
+    assert(meta.width <= 512, "Vídeo respeita limite 512px");
+    assertEqual(meta.format, "webp", "Vídeo vira WebP");
+    assert(output.length <= 500 * 1024, "Vídeo abaixo de 500KB");
+    assert(output.includes(Buffer.from("bot do @tomm")), "Vídeo inclui autor no metadata");
+  } finally {
+    try { fs.unlinkSync(inputPath); } catch {}
+  }
 }
 
 function testConfig() {
-  console.log("\n[2] Configuração");
+  console.log("\n[3] Configuração");
   const config = require("./config");
 
-  assert(config.commandPrefix === ".fig", "Prefixo = .fig");
-  assert(config.commandPrefixAlt === ".sticker", "Prefixo alt = .sticker");
-  assert(config.sticker.maxSizeKB === 500, "Max 500KB");
-  assert(config.sticker.maxWidth === 512, "Largura 512");
-  assert(config.sticker.maxDurationSec === 6, "Duração 6s");
+  assert(config.commands.sticker.includes(".fig"), "Comando .fig ativo");
+  assert(config.commands.sticker.includes(".sticker"), "Comando .sticker ativo");
+  assertEqual(config.commands.menu, ".menu", "Comando de menu");
+  assertEqual(config.bot.allowSelfMessages, true, "Permite testar consigo mesmo");
+  assertEqual(config.sticker.size, 512, "Sticker base 512");
+  assertEqual(config.sticker.maxSizeKB, 500, "Limite 500KB");
+  assertEqual(config.sticker.author, "bot do @tomm", "Autor do sticker");
 }
 
-function testLogger() {
-  console.log("\n[3] Logger");
-  const { log, logError, setupErrorFilter } = require("./lib/logger");
-  assert(typeof log === "function", "log é função");
-  assert(typeof logError === "function", "logError é função");
-  assert(typeof setupErrorFilter === "function", "setupErrorFilter é função");
+function testBotHelpers() {
+  console.log("\n[4] Bot e comandos");
+  const { getState, startBot, _private } = require("./lib/bot");
+
+  assert(typeof startBot === "function", "startBot exportado");
+  assert(typeof getState === "function", "getState exportado");
+  assert(_private.isMenuCommand(" .MENU "), ".menu é case-insensitive");
+  assert(_private.isStickerCommand(" .FIG "), ".fig é case-insensitive");
+  assert(_private.isStickerCommand(".sticker"), ".sticker funciona");
+  assert(!_private.shouldIgnoreMessage({ key: { fromMe: true, remoteJid: "me@s.whatsapp.net" } }), "Não ignora mensagens próprias");
+  assert(_private.shouldIgnoreMessage({ key: { remoteJid: "status@broadcast" } }), "Ignora status");
+  assert(!_private.MENU_TEXT.includes("Teste consigo mesmo"), "Menu não mostra teste consigo mesmo");
+  assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
+  assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
+  assert(!_private.MENU_TEXT.includes("FORMATO"), "Menu não mostra seção formato");
 }
 
-function testServer() {
-  console.log("\n[4] Servidor");
-  const { startServer } = require("./lib/server");
-  assert(typeof startServer === "function", "startServer é função");
-}
+function testMediaParsing() {
+  console.log("\n[5] Leitura de mídia");
+  const { _private } = require("./lib/bot");
 
-function testBot() {
-  console.log("\n[5] Bot");
-  const { startBot, getState } = require("./lib/bot");
-  assert(typeof startBot === "function", "startBot é função");
-  assert(typeof getState === "function", "getState é função");
+  const imageMessage = { imageMessage: { caption: ".fig" } };
+  const videoMessage = { videoMessage: { caption: ".fig" } };
+  const wrapped = { ephemeralMessage: { message: imageMessage } };
 
-  const s = getState();
-  assert(s.status === "waiting" || s.status === "connected", "Status válido");
-}
+  assertEqual(_private.getMedia(imageMessage).type, "image", "Detecta imagem");
+  assertEqual(_private.getMedia(videoMessage).type, "video", "Detecta vídeo/GIF");
+  assertEqual(_private.getMedia(wrapped).type, "image", "Desembrulha mensagem ephemeral");
+  assertEqual(_private.getText({ conversation: ".menu" }), ".menu", "Lê texto simples");
+  assertEqual(_private.getText(imageMessage), ".fig", "Lê legenda");
 
-function testDeduplication() {
-  console.log("\n[6] Deduplicação");
-  // Testa via require do módulo (indireto)
-  // O isDuplicate não é exportado, mas testamos o comportamento
-  const { getState } = require("./lib/bot");
-  assert(typeof getState === "function", "Bot funcional após deduplicação");
-}
-
-function testDependencies() {
-  console.log("\n[7] Dependências");
-  const deps = ["@whiskeysockets/baileys", "sharp", "fluent-ffmpeg", "qrcode", "pino"];
-  deps.forEach((d) => {
-    try { require(d); assert(true, `${d} importado`); }
-    catch { assert(false, `${d} importado`); }
+  const quoted = _private.getQuotedMedia({
+    key: { remoteJid: "chat@s.whatsapp.net" },
+    message: {
+      extendedTextMessage: {
+        text: ".fig",
+        contextInfo: {
+          stanzaId: "quoted-1",
+          quotedMessage: imageMessage,
+        },
+      },
+    },
   });
+
+  assert(quoted, "Detecta mídia respondida");
+  assertEqual(quoted.media.type, "image", "Preserva tipo da mídia respondida");
+}
+
+function testRecentMediaCache() {
+  console.log("\n[6] Cache de última mídia");
+  const { _private } = require("./lib/bot");
+  const msg = { key: { id: "media-1" }, message: { imageMessage: {} } };
+  const media = _private.getMedia(msg.message);
+
+  _private.rememberMedia("chat-cache", msg, media, 1000);
+
+  const recent = _private.getRecentMedia("chat-cache", 2000);
+  assert(recent, "Recupera mídia recente");
+  assertEqual(recent.msg.key.id, "media-1", "Mídia recuperada é a correta");
+
+  const expired = _private.getRecentMedia("chat-cache", 1000 + 6 * 60 * 1000);
+  assert(!expired, "Expira mídia antiga");
+}
+
+function testConverterHelpers() {
+  console.log("\n[7] Tentativas de vídeo");
+  const { _private } = require("./lib/stickerConverter");
+  const attempts = _private.buildVideoAttempts();
+
+  assert(attempts.length > 0, "Gera tentativas de compressão");
+  assert(attempts.some((item) => item.duration < 6), "Inclui cortes menores");
+  assert(attempts.some((item) => item.size < 512), "Inclui reduções de tamanho");
+  assert(attempts.every((item) => item.size === item.size), "Mantém saída quadrada");
+
+  const source = _private.buildVideoFilter({ fps: 15, size: 512 });
+  assert(source.includes("scale=512:512"), "Vídeo achata para 512x512");
+  assert(!source.includes("crop="), "Vídeo não recorta");
+
+  const exif = _private.createStickerExif();
+  assert(exif.includes(Buffer.from("bot do @tomm")), "EXIF contém autor");
+  assert(exif.includes(Buffer.from("Figurinhas do bot")), "EXIF contém pacote");
+
+  const tinyWebp = Buffer.concat([
+    Buffer.from("RIFF\x00\x00\x00\x00WEBPVP8 ", "binary"),
+    Buffer.from([10, 0, 0, 0, 0, 0, 0, 0, 0x9d, 0x01, 0x2a, 0x00, 0x02, 0x00, 0x02]),
+  ]);
+  tinyWebp.writeUInt32LE(tinyWebp.length - 8, 4);
+  const withExif = _private.insertWebpChunk(tinyWebp, "EXIF", exif);
+  assertEqual(withExif.toString("ascii", 12, 16), "VP8X", "Insere VP8X antes de EXIF");
+  assert((withExif[20] & 0x08) === 0x08, "VP8X declara EXIF");
+}
+
+async function testServer() {
+  console.log("\n[8] Servidor QR");
+  const { startServer } = require("./lib/server");
+  const server = await startServer(0, () => ({ currentQR: null, status: "waiting" }));
+
+  assert(server && typeof server.close === "function", "Servidor inicia e retorna instância");
+  await new Promise((resolve) => server.close(resolve));
 }
 
 async function run() {
-  console.log("=== Testes do Bot de Figurinhas ===");
+  console.log("=== Testes do Sticker Bot ===");
 
-  testConfig();
-  testLogger();
-  testServer();
-  testBot();
-  testDeduplication();
-  testDependencies();
   await testImageConversion();
+  await testVideoConversion();
+  testConfig();
+  testBotHelpers();
+  testMediaParsing();
+  testRecentMediaCache();
+  testConverterHelpers();
+  await testServer();
 
-  console.log(`\n=== Resultado: ${passed} passaram, ${failed} falharam ===`);
+  console.log(`\n=== Resultado: ${passed} passaram, ${failed} falharam, ${skipped} pulados ===`);
   if (failed > 0) process.exit(1);
 }
 

@@ -1,145 +1,85 @@
 # WhatsApp Sticker Bot
 
-Bot de WhatsApp que converte imagens e GIFs/vídeos em figurinhas (stickers) usando apenas ferramentas gratuitas e conversão local.
+Bot local de WhatsApp que usa QR Code para conectar sua própria conta e criar figurinhas 1:1 a partir de imagens, GIFs e vídeos.
 
-## Pré-requisitos
+## Requisitos
 
-- **Node.js** >= 18.0.0
-- **ffmpeg** e **ffprobe** instalados e no PATH do sistema
+- Node.js 18+
+- ffmpeg e ffprobe no PATH
 
-### Instalando o ffmpeg
-
-| Sistema | Comando |
-|---------|---------|
-| Windows | `winget install FFmpeg` ou baixe em https://ffmpeg.org |
-| macOS | `brew install ffmpeg` |
-| Linux | `sudo apt install ffmpeg` |
-
-## Instalação
+No Windows:
 
 ```bash
-cd whatsapp-sticker-bot
-npm install
+winget install FFmpeg
 ```
 
-## Como rodar
+## Rodar
 
 ```bash
-npm start
+node index.js
 ```
 
-1. Abra **http://localhost:3000** no navegador
-2. No celular: WhatsApp > Dispositivos conectados > Vincular dispositivo
-3. Escaneie o QR Code que aparece no navegador
-4. Pronto! O bot está online
+Depois abra:
 
-## Como usar
+```text
+http://localhost:3000
+```
 
-Envie uma **imagem**, **GIF** ou **vídeo curto** com a legenda `.fig` ou `.sticker`.
+No celular, vá em **WhatsApp > Dispositivos conectados > Vincular dispositivo** e escaneie o QR Code.
 
-O bot converte e envia a figurinha de volta automaticamente.
+## Comandos
 
-### Limites
+- `.menu` — mostra os comandos.
+- `.fig` — cria figurinha da imagem/vídeo/GIF.
+- `.sticker` — alias de `.fig`.
 
-| Parâmetro | Valor |
-|-----------|-------|
-| Tamanho máximo | 500 KB |
-| Resolução | 512×512 px |
-| Duração máxima (vídeo) | 10 segundos |
-| FPS padrão | 15 fps |
+## Formas de usar
 
----
+1. Envie uma imagem/vídeo/GIF com legenda `.fig`.
+2. Responda uma imagem/vídeo/GIF com `.fig`.
+3. Envie uma mídia e depois mande `.fig` em até 5 minutos.
 
-## Hospedagem gratuita 24h
+O bot também aceita comandos enviados pelo próprio número conectado, para facilitar teste consigo mesmo.
 
-### Opção 1: Oracle Cloud (recomendado — grátis pra sempre)
+## Conversão
 
-1. Crie conta gratuita em [cloud.oracle.com](https://cloud.oracle.com)
-2. Crie uma instância **Always Free** (Ubuntu 22.04, 1GB RAM)
-3. Conecte via SSH no servidor
-4. Execute o script de deploy:
+- Imagens viram WebP 512×512.
+- Vídeos/GIFs viram WebP animado quadrado.
+- Se o vídeo ficar pesado, o bot tenta cortar duração, reduzir FPS, qualidade e tamanho até caber.
+- Limite alvo: 500 KB.
+
+## Estrutura
+
+```text
+index.js
+config.js
+lib/
+  bot.js
+  logger.js
+  server.js
+  stickerConverter.js
+session/
+logs/
+test.js
+```
+
+## Testes
 
 ```bash
-# No seu PC, copie os arquivos para o servidor:
-scp -r ./* ubuntu@SEU_IP:/home/ubuntu/whatsapp-sticker-bot/
-
-# No servidor via SSH:
-cd /home/ubuntu/whatsapp-sticker-bot
-chmod +x deploy-oracle.sh
-./deploy-oracle.sh
+node test.js
 ```
 
-5. Libere a porta 3000 no firewall do Oracle Cloud
-6. Acesse `http://SEU_IP:3000` para escanear o QR
+Se o ambiente bloquear ffmpeg, o teste de vídeo é pulado, mas o bot ainda exige ffmpeg para rodar.
 
-**Comandos úteis (no servidor):**
-```bash
-pm2 status              # Ver status
-pm2 logs sticker-bot    # Ver logs
-pm2 restart sticker-bot # Reiniciar
-```
-
-### Opção 2: Render (mais fácil)
-
-1. Faça push do projeto num repositório GitHub
-2. Crie conta em [render.com](https://render.com)
-3. New → Background Worker → Connect GitHub repo
-4. Configure:
-   - Build Command: `npm install`
-   - Start Command: `node index.js`
-5. Clique em Deploy
-
-⚠️ O Render dorme após 15 min sem uso no free tier.
-
-### Opção 3: Docker (qualquer VPS)
-
-```bash
-# Build e rodar
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Parar
-docker-compose down
-```
-
----
-
-## Estrutura do projeto
-
-```
-whatsapp-sticker-bot/
-├── index.js               # Ponto de entrada
-├── config.js              # Configurações
-├── lib/
-│   └── stickerConverter.js # Conversores de mídia
-├── session/               # Dados de autenticação
-├── Dockerfile             # Para deploy com Docker
-├── docker-compose.yml     # Docker Compose
-├── deploy-oracle.sh       # Script de deploy Oracle Cloud
-├── render.yaml            # Config Render
-├── package.json
-└── README.md
-```
-
-## Personalização
-
-Edite `config.js`:
-
-- **Comando**: troque `.fig` / `.sticker`
-- **Limites**: tamanho, resolução, duração, FPS
-- **Porta do QR**: `qrServerPort` (padrão: 3000)
-
-## Solução de problemas
+## Problemas comuns
 
 | Problema | Solução |
-|----------|---------|
-| `ffmpeg não encontrado` | Instale o ffmpeg |
-| QR Code não aparece | Acesse http://localhost:3000 |
-| `EADDRINUSE` | Mata o processo antigo: `taskkill /F /IM node.exe` |
-| Bot desconecta | Apague a pasta `session/` e escaneie de novo |
+| --- | --- |
+| Porta 3000 em uso | Feche outro `node.exe` ou rode `taskkill /F /IM node.exe` |
+| QR não aparece | Abra `http://localhost:3000` |
+| Sessão quebrada/Bad MAC | Pare o bot, apague `session/`, rode de novo e escaneie o QR |
+| Vídeo não vira sticker | Use vídeo menor/mais curto ou confira se ffmpeg está instalado |
 
-## Licença
+## Aviso
 
-Uso pessoal. Não use para spam ou envio em massa.
+Use para fins pessoais. Evite spam ou automação em massa para não arriscar bloqueio da conta.

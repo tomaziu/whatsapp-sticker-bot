@@ -9,12 +9,14 @@ const { startServer } = require("./lib/server");
 const { startBot, getState } = require("./lib/bot");
 const config = require("./config");
 
-// Filtra erros de criptografia do terminal
-setupErrorFilter();
+async function main() {
+  setupErrorFilter();
 
-// Inicia servidor QR + bot
-startServer(config.qrServerPort || 3000, getState);
-startBot().catch((e) => {
-  console.log(`[FATAL] ${e.message}`);
+  await startServer(config.qrServerPort || 3000, getState);
+  await startBot();
+}
+
+main().catch((e) => {
+  log(`[FATAL] ${e.message}`);
   process.exit(1);
 });
