@@ -1,12 +1,5 @@
 /**
  * index.js — Bot de WhatsApp que converte imagens/GIFs em figurinhas
- *
- * Como usar:
- *   1. npm start
- *   2. Abra http://localhost:3000 no navegador
- *   3. No celular: WhatsApp > Dispositivos conectados > Vincular dispositivo
- *   4. Escaneie o QR Code que aparece no navegador
- *   5. Pronto! Envie imagem/gif com ".fig" ou ".sticker" como legenda
  */
 const {
   default: makeWASocket,
@@ -24,13 +17,21 @@ const fs = require("fs");
 const config = require("./config");
 const { imageToSticker, videoToSticker } = require("./lib/stickerConverter");
 
+// Logger silenciado — não mostra erros de criptografia do WhatsApp
 const logger = pino({ level: "silent" });
 
 let currentQR = null;
 let status = "waiting";
 let serverStarted = false;
+const recentIds = []; // IDs recentes para deduplicação
 
-// ─── Verifica ffmpeg ───────────────────────────────────────────────
+function isDuplicate(id) {
+  if (recentIds.includes(id)) return true;
+  recentIds.push(id);
+  if (recentIds.length > 100) recentIds.shift();
+  return false;
+}
+
 function checkFfmpeg() {
   const { execSync } = require("child_process");
   try {
@@ -38,14 +39,13 @@ function checkFfmpeg() {
     execSync("ffprobe -version", { stdio: "ignore" });
     console.log("[OK] ffmpeg detectado.");
   } catch {
-    console.error("[ERRO] Instale o ffmpeg: winget install FFmpeg");
+    console.log("[ERRO] Instale o ffmpeg: winget install FFmpeg");
     process.exit(1);
   }
 }
 
-// ─── Servidor HTTP que mostra o QR no navegador ───────────────────
 function startServer(port) {
-  if (serverStarted) return; // Não recria o servidor nas reconexões
+  if (serverStarted) return;
   serverStarted = true;
 
   const html = `<!DOCTYPE html>
@@ -111,9 +111,15 @@ async function processMessage(sock, messageUpdate) {
   const msg = messageUpdate.messages?.[0];
   if (!msg) return;
 
+  const id = msg.key.id;
+  if (isDuplicate(id)) return;
+
   const from = msg.key.remoteJid;
   const m = msg.message;
   if (!m) return;
+
+  // Número de quem criou a figurinha
+  const numero = from.replace(/@.*/, "").replace(/^55/, "");
 
   // Comando .menu
   const text = m.conversation || m.extendedTextMessage?.text || "";
@@ -171,9 +177,9 @@ Quanto mais quadrada a imagem, melhor fica a figurinha.
       author: "bot do t00m4ziow",
     });
 
-    console.log(`[OK] Figurinha criada!`);
+    console.log(`[OK] Figurinha criada para +55${numero}`);
   } catch (err) {
-    console.log(`[ERRO] ${err.message}`);
+    console.log(`[ERRO] Figurinha falhou: ${err.message}`);
   }
 }
 
@@ -187,7 +193,7 @@ async function startBot() {
 
   const { state, saveCreds } = await useMultiFileAuthState(config.paths.authInfo);
   const { version } = await fetchLatestBaileysVersion();
-  console.log(`[Info] WhatsApp Web v${version.join(".")}`);
+  console.log(`[OK] WhatsApp Web v${version.join(".")}`);
 
   startServer(config.qrServerPort || 3000);
 
@@ -214,17 +220,16 @@ async function startBot() {
       const dataUrl = await QRCode.toDataURL(qr, { width: 300, margin: 2 });
       currentQR = dataUrl.split(",")[1];
       status = "waiting";
-      console.log("[QR] Pronto! Escaneie no navegador.");
+      console.log("[OK] Escaneie o QR Code no navegador.");
     }
 
     if (connection === "close") {
       const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
       if (code !== DisconnectReason.loggedOut) {
-        console.log("[!] Reconectando...");
+        console.log("[OK] Reconectando...");
         currentQR = null;
         startBot();
       } else {
-        // Deslogado — apaga session automaticamente
         try {
           fs.rmSync(config.paths.authInfo, { recursive: true, force: true });
         } catch {}
@@ -243,6 +248,6 @@ async function startBot() {
 }
 
 startBot().catch((e) => {
-  console.error("[FATAL]", e);
+  console.log(`[FATAL] ${e.message}`);
   process.exit(1);
 });
