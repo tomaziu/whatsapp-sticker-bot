@@ -192,7 +192,11 @@ async function startBot() {
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("messages.upsert", async (u) => {
-    for (const m of u.messages) await processMessage(sock, { messages: [m] });
+    for (const m of u.messages) {
+      const tipo = m.message?.imageMessage ? "IMG" : m.message?.videoMessage ? "VID" : m.message?.conversation ? "TXT" : "OUT";
+      console.log(`[RECEBEU] Tipo: ${tipo} | De: ${m.key.remoteJid} | fromMe: ${m.key.fromMe}`);
+      await processMessage(sock, { messages: [m] });
+    }
   });
 
   sock.ev.on("connection.update", async (u) => {
