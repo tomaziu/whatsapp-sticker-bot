@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "reset-session": "node scripts/reset-session.js",
     "test": "node test.js"
   },
   "dependencies": {

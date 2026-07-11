@@ -97,6 +97,8 @@ function testConfig() {
   assertEqual(config.sticker.size, 512, "Sticker base 512");
   assertEqual(config.sticker.maxSizeKB, 500, "Limite 500KB");
   assertEqual(config.sticker.author, "bot do @tomm", "Autor do sticker");
+  assert(config.bot.reconnectMinMs > 0, "Reconexão mínima configurada");
+  assert(config.bot.reconnectMaxMs >= config.bot.reconnectMinMs, "Reconexão máxima configurada");
 }
 
 function testBotHelpers() {

@@ -8,6 +8,8 @@ module.exports = {
     name: "Sticker Bot",
     allowSelfMessages: true,
     browser: ["Sticker Bot", "Chrome", "1.0.0"],
+    reconnectMinMs: 5000,
+    reconnectMaxMs: 60000,
   },
 
   sticker: {
