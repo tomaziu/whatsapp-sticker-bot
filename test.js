@@ -213,7 +213,9 @@ function testMediaParsing() {
       },
     },
   });
-  assertEqual(target, "551188887777@s.whatsapp.net", "Detecta usuário marcado no .figpp");
+  assertEqual(target.jid, "551188887777:12@s.whatsapp.net", "Detecta usuário marcado no .figpp");
+  assertEqual(_private.getPhoneFromJid(target.jid), "551188887777", "Extrai número do JID marcado");
+  assert(_private.getProfilePictureCandidates(target).includes("551188887777@s.whatsapp.net"), "Gera candidato normalizado para foto de perfil");
 }
 
 function testRankHelpers() {
