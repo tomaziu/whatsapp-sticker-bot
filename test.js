@@ -116,6 +116,7 @@ function testBotHelpers() {
   assert(!_private.shouldIgnoreMessage({ key: { fromMe: true, remoteJid: "me@s.whatsapp.net" } }), "Não ignora mensagens próprias");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "status@broadcast" } }), "Ignora status");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "120363@newsletter" } }), "Ignora canais/newsletters");
+  assert(!_private.MENU_TEXT.includes(".zerarrank"), "Menu não mostra zerarrank");
   assert(!_private.MENU_TEXT.includes("Teste consigo mesmo"), "Menu não mostra teste consigo mesmo");
   assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
   assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
@@ -183,6 +184,8 @@ function testRankHelpers() {
   assertEqual(rank.parseRankCommand(".meurank").type, "me", ".meurank mostra posição");
   assertEqual(rank.parseRankCommand(".iniciarrank").type, "start", ".iniciarrank ativa grupo");
   assertEqual(rank.parseRankCommand(".zerarrank").type, "reset", ".zerarrank zera rank");
+  assertEqual(rank.parseRankCommand(".zerarrank").scope, "group", ".zerarrank zera grupo atual");
+  assertEqual(rank.parseRankCommand(".zerarrank global").scope, "global", ".zerarrank global zera todos");
   assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
   assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
@@ -225,9 +228,14 @@ function testRankHelpers() {
   assertEqual(rank.getSafeDisplayName({ displayName: "5511999999999" }), "Participante", "Fallback sem número no rank");
   assert(!rank.formatRankList([{ displayName: "5511999999999", points: 1, messages: 1 }], "Rank").includes("5511999999999"), "Ranking não mostra número");
 
+  rank.resetGroupRank(groupA);
+  assertEqual(rank.rankGroup(groupA).length, 0, "Zera ranking do grupo atual");
+  assertEqual(rank.rankGlobal()[0].displayName, "Ana", "Reset de grupo mantém outros grupos");
+  assert(rank.isRankEnabled(groupA), "Mantém grupo ativado ao zerar");
+
   rank.resetGlobalRank();
   assertEqual(rank.rankGlobal().length, 0, "Zera ranking global");
-  assert(rank.isRankEnabled(groupA), "Mantém grupos ativados ao zerar");
+  assert(rank.isRankEnabled(groupB), "Mantém grupos ativados ao zerar global");
 }
 
 function testRecentMediaCache() {
