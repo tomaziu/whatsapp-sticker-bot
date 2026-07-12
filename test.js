@@ -216,6 +216,10 @@ function testRankHelpers() {
   assert(rank.formatMyRank(position, "Ana").includes("Posição: #2"), "Formata meu rank");
   assert(rank.formatRankHelp().includes(".rank global"), "Ajuda explica variações");
   assert(!rank.formatRankHelp().includes(".pararrank"), "Ajuda não mostra pararrank");
+  assertEqual(rank.sanitizeDisplayName("5511999999999"), "", "Remove número como nome");
+  assertEqual(rank.sanitizeDisplayName("5511999999999@s.whatsapp.net"), "", "Remove JID como nome");
+  assertEqual(rank.getSafeDisplayName({ displayName: "5511999999999" }), "Participante", "Fallback sem número no rank");
+  assert(!rank.formatRankList([{ displayName: "5511999999999", points: 1, messages: 1 }], "Rank").includes("5511999999999"), "Ranking não mostra número");
 }
 
 function testRecentMediaCache() {
