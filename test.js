@@ -121,6 +121,7 @@ function testBotHelpers() {
   assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
   assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
   assert(!_private.MENU_TEXT.includes("FORMATO"), "Menu não mostra seção formato");
+  assertEqual(_private.normalizeUserJid("551199999999:12@s.whatsapp.net"), "551199999999@s.whatsapp.net", "Normaliza JID do próprio bot");
 }
 
 async function testRankCommandOutsideGroup() {
@@ -227,6 +228,10 @@ function testRankHelpers() {
   assertEqual(rank.sanitizeDisplayName("5511999999999@s.whatsapp.net"), "", "Remove JID como nome");
   assertEqual(rank.getSafeDisplayName({ displayName: "5511999999999" }), "Participante", "Fallback sem número no rank");
   assert(!rank.formatRankList([{ displayName: "5511999999999", points: 1, messages: 1 }], "Rank").includes("5511999999999"), "Ranking não mostra número");
+  assert(!rank.addActivity({ groupId: groupA, participantId: groupA, displayName: "Participante", points: 1, now: 50000 }), "Não pontua usando ID do grupo como participante");
+
+  rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Participante", points: 1, now: 60000 });
+  assertEqual(rank.rankGroup(groupA).find((item) => item.participantId === ana).displayName, "Ana", "Não troca nome conhecido por Participante");
 
   rank.resetGroupRank(groupA);
   assertEqual(rank.rankGroup(groupA).length, 0, "Zera ranking do grupo atual");
