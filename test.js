@@ -114,6 +114,9 @@ function testBotHelpers() {
   assert(_private.isStickerCommand(" .FIG "), ".fig é case-insensitive");
   assert(_private.isStickerCommand(".sticker"), ".sticker funciona");
   assert(!_private.shouldIgnoreMessage({ key: { fromMe: true, remoteJid: "me@s.whatsapp.net" } }), "Não ignora mensagens próprias");
+  _private.rememberBotSentMessage({ key: { id: "bot-response-1" } });
+  assert(_private.isBotSentMessage({ key: { id: "bot-response-1" } }), "Identifica resposta enviada pelo bot");
+  assert(!_private.isBotSentMessage({ key: { id: "manual-message-1" } }), "Não marca mensagem manual como resposta do bot");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "status@broadcast" } }), "Ignora status");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "120363@newsletter" } }), "Ignora canais/newsletters");
   assert(!_private.MENU_TEXT.includes(".zerarrank"), "Menu não mostra zerarrank");
@@ -184,11 +187,16 @@ function testRankHelpers() {
   assert(rank.isGroupJid(groupA), "Reconhece JID de grupo");
   assertEqual(rank.parseRankCommand(".rank").type, "group", ".rank mostra grupo");
   assertEqual(rank.parseRankCommand(".rank global").type, "global", ".rank global mostra global");
+  assertEqual(rank.parseRankCommand(".rank global hoje").type, "invalid", ".rank global com texto extra é inválido");
+  assertEqual(rank.parseRankCommand(".rank qualquer texto").type, "invalid", ".rank com texto extra é inválido");
   assertEqual(rank.parseRankCommand(".meurank").type, "me", ".meurank mostra posição");
+  assertEqual(rank.parseRankCommand(".meurank teste").type, "invalid", ".meurank com texto extra é inválido");
   assertEqual(rank.parseRankCommand(".iniciarrank").type, "start", ".iniciarrank ativa grupo");
+  assertEqual(rank.parseRankCommand(".iniciarrank teste").type, "invalid", ".iniciarrank com texto extra é inválido");
   assertEqual(rank.parseRankCommand(".zerarrank").type, "reset", ".zerarrank zera rank");
   assertEqual(rank.parseRankCommand(".zerarrank").scope, "group", ".zerarrank zera grupo atual");
   assertEqual(rank.parseRankCommand(".zerarrank global").scope, "global", ".zerarrank global zera todos");
+  assertEqual(rank.parseRankCommand(".zerarrank grupo").type, "invalid", ".zerarrank com argumento inválido é inválido");
   assertEqual(rank.parseRankCommand(".removerank Ana Maria").type, "remove", ".removerank remove usuário");
   assertEqual(rank.parseRankCommand(".removerank Ana Maria").query, "Ana Maria", ".removerank preserva nome");
   assertEqual(rank.normalizeParticipantId(anaDevice), ana, "Normaliza participante pelo número");
