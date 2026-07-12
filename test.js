@@ -178,6 +178,7 @@ function testRankHelpers() {
   const groupA = "120363-a@g.us";
   const groupB = "120363-b@g.us";
   const ana = "551111111111@s.whatsapp.net";
+  const anaDevice = "551111111111:24@s.whatsapp.net";
   const bia = "552222222222@s.whatsapp.net";
 
   assert(rank.isGroupJid(groupA), "Reconhece JID de grupo");
@@ -190,6 +191,7 @@ function testRankHelpers() {
   assertEqual(rank.parseRankCommand(".zerarrank global").scope, "global", ".zerarrank global zera todos");
   assertEqual(rank.parseRankCommand(".removerank Ana Maria").type, "remove", ".removerank remove usuário");
   assertEqual(rank.parseRankCommand(".removerank Ana Maria").query, "Ana Maria", ".removerank preserva nome");
+  assertEqual(rank.normalizeParticipantId(anaDevice), ana, "Normaliza participante pelo número");
   assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
   assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
@@ -220,6 +222,10 @@ function testRankHelpers() {
   const globalRank = rank.rankGlobal();
   assertEqual(globalRank[0].displayName, "Ana", "Rank global soma grupos");
   assertEqual(globalRank[0].points, 4, "Rank global soma pontos");
+
+  rank.addActivity({ groupId: groupB, participantId: anaDevice, displayName: "Ana", points: 1, now: 45000 });
+  assertEqual(rank.getRankUserId(anaDevice), rank.getRankUserId(ana), "Mesmo número mantém mesmo ID");
+  assertEqual(rank.rankGlobal().filter((item) => item.displayName === "Ana").length, 1, "Mesmo número não duplica no global");
 
   const position = rank.getUserPosition(groupA, ana);
   assertEqual(position.position, 2, "Mostra posição do usuário");
