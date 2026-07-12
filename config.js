@@ -3,6 +3,7 @@ module.exports = {
     menu: ".menu",
     sticker: [".fig", ".sticker"],
     rank: ".rank",
+    startRank: ".iniciarrank",
     myRank: ".meurank",
   },
 

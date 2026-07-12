@@ -112,6 +112,7 @@ function testBotHelpers() {
   assert(_private.isStickerCommand(".sticker"), ".sticker funciona");
   assert(!_private.shouldIgnoreMessage({ key: { fromMe: true, remoteJid: "me@s.whatsapp.net" } }), "Não ignora mensagens próprias");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "status@broadcast" } }), "Ignora status");
+  assert(_private.shouldIgnoreMessage({ key: { remoteJid: "120363@newsletter" } }), "Ignora canais/newsletters");
   assert(!_private.MENU_TEXT.includes("Teste consigo mesmo"), "Menu não mostra teste consigo mesmo");
   assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
   assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
@@ -164,14 +165,29 @@ function testRankHelpers() {
   assertEqual(rank.parseRankCommand(".rank").type, "group", ".rank mostra grupo");
   assertEqual(rank.parseRankCommand(".rank global").type, "global", ".rank global mostra global");
   assertEqual(rank.parseRankCommand(".meurank").type, "me", ".meurank mostra posição");
+  assertEqual(rank.parseRankCommand(".iniciarrank").type, "start", ".iniciarrank ativa grupo");
+  assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
   assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
   assertEqual(rank.getMessageScore({ isSticker: true }), config.rank.points.sticker, "Sticker pontua");
   assertEqual(rank.getMessageScore({ text: ".fig" }), 0, "Comando não pontua");
 
-  rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Ana", points: 1, now: 10000 });
-  rank.addActivity({ groupId: groupA, participantId: bia, displayName: "Bia", points: 2, now: 20000 });
-  rank.addActivity({ groupId: groupB, participantId: ana, displayName: "Ana", points: 3, now: 30000 });
+  const ignored = rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Ana", points: 1, now: 10000 });
+  assert(!ignored, "Grupo sem .iniciarrank não pontua");
+
+  rank.loadStats().groups[groupA] = {
+    users: {
+      [ana]: { points: 99, messages: 99, displayName: "Ana" },
+    },
+  };
+  rank.startRank(groupA, 10000);
+  rank.startRank(groupB, 10000);
+  assert(rank.isRankEnabled(groupA), "Ativa ranking por grupo");
+  assertEqual(rank.rankGroup(groupA).length, 0, ".iniciarrank começa zerado na primeira ativação");
+
+  rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Ana", points: 1, now: 20000 });
+  rank.addActivity({ groupId: groupA, participantId: bia, displayName: "Bia", points: 2, now: 30000 });
+  rank.addActivity({ groupId: groupB, participantId: ana, displayName: "Ana", points: 3, now: 40000 });
 
   const groupRank = rank.rankGroup(groupA);
   assertEqual(groupRank[0].displayName, "Bia", "Rank do grupo é separado");
@@ -186,6 +202,7 @@ function testRankHelpers() {
   assert(rank.formatRankList(groupRank, "🏆 *Ranking do grupo*").includes("Bia"), "Formata ranking");
   assert(rank.formatMyRank(position, "Ana").includes("Posição: #2"), "Formata meu rank");
   assert(rank.formatRankHelp().includes(".rank global"), "Ajuda explica variações");
+  assert(!rank.formatRankHelp().includes(".pararrank"), "Ajuda não mostra pararrank");
 }
 
 function testRecentMediaCache() {
