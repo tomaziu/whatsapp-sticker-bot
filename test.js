@@ -149,8 +149,47 @@ function testMediaParsing() {
   assertEqual(quoted.media.type, "image", "Preserva tipo da mídia respondida");
 }
 
+function testRankHelpers() {
+  console.log("\n[6] Ranking");
+  const rank = require("./lib/rank");
+  const config = require("./config");
+  rank.resetStatsForTests();
+
+  const groupA = "120363-a@g.us";
+  const groupB = "120363-b@g.us";
+  const ana = "551111111111@s.whatsapp.net";
+  const bia = "552222222222@s.whatsapp.net";
+
+  assert(rank.isGroupJid(groupA), "Reconhece JID de grupo");
+  assertEqual(rank.parseRankCommand(".rank").type, "group", ".rank mostra grupo");
+  assertEqual(rank.parseRankCommand(".rank global").type, "global", ".rank global mostra global");
+  assertEqual(rank.parseRankCommand(".meurank").type, "me", ".meurank mostra posição");
+  assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
+  assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
+  assertEqual(rank.getMessageScore({ isSticker: true }), config.rank.points.sticker, "Sticker pontua");
+  assertEqual(rank.getMessageScore({ text: ".fig" }), 0, "Comando não pontua");
+
+  rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Ana", points: 1, now: 10000 });
+  rank.addActivity({ groupId: groupA, participantId: bia, displayName: "Bia", points: 2, now: 20000 });
+  rank.addActivity({ groupId: groupB, participantId: ana, displayName: "Ana", points: 3, now: 30000 });
+
+  const groupRank = rank.rankGroup(groupA);
+  assertEqual(groupRank[0].displayName, "Bia", "Rank do grupo é separado");
+  assertEqual(groupRank[0].points, 2, "Rank ordena por pontos");
+
+  const globalRank = rank.rankGlobal();
+  assertEqual(globalRank[0].displayName, "Ana", "Rank global soma grupos");
+  assertEqual(globalRank[0].points, 4, "Rank global soma pontos");
+
+  const position = rank.getUserPosition(groupA, ana);
+  assertEqual(position.position, 2, "Mostra posição do usuário");
+  assert(rank.formatRankList(groupRank, "🏆 *Ranking do grupo*").includes("Bia"), "Formata ranking");
+  assert(rank.formatMyRank(position, "Ana").includes("Posição: #2"), "Formata meu rank");
+  assert(rank.formatRankHelp().includes(".rank global"), "Ajuda explica variações");
+}
+
 function testRecentMediaCache() {
-  console.log("\n[6] Cache de última mídia");
+  console.log("\n[7] Cache de última mídia");
   const { _private } = require("./lib/bot");
   const msg = { key: { id: "media-1" }, message: { imageMessage: {} } };
   const media = _private.getMedia(msg.message);
@@ -166,7 +205,7 @@ function testRecentMediaCache() {
 }
 
 function testConverterHelpers() {
-  console.log("\n[7] Tentativas de vídeo");
+  console.log("\n[8] Tentativas de vídeo");
   const { _private } = require("./lib/stickerConverter");
   const attempts = _private.buildVideoAttempts();
 
@@ -194,7 +233,7 @@ function testConverterHelpers() {
 }
 
 async function testServer() {
-  console.log("\n[8] Servidor QR");
+  console.log("\n[9] Servidor QR");
   const { startServer } = require("./lib/server");
   const server = await startServer(0, () => ({ currentQR: null, status: "waiting" }));
 
@@ -210,6 +249,7 @@ async function run() {
   testConfig();
   testBotHelpers();
   testMediaParsing();
+  testRankHelpers();
   testRecentMediaCache();
   testConverterHelpers();
   await testServer();

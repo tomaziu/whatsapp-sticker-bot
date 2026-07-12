@@ -2,6 +2,8 @@ module.exports = {
   commands: {
     menu: ".menu",
     sticker: [".fig", ".sticker"],
+    rank: ".rank",
+    myRank: ".meurank",
   },
 
   bot: {
@@ -24,9 +26,22 @@ module.exports = {
     emojis: ["🤖"],
   },
 
+  rank: {
+    enabled: true,
+    topLimit: 10,
+    points: {
+      text: 1,
+      media: 2,
+      sticker: 1,
+    },
+    antiSpamMs: 5000,
+  },
+
   qrServerPort: 3000,
 
   paths: {
     authInfo: "./session",
+    dataDir: "./data",
+    rankStats: "./data/rank-stats.json",
   },
 };
