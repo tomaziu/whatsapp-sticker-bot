@@ -51,7 +51,7 @@ async function testImageConversion() {
   assertEqual(meta.height, 512, "Altura final");
   assertEqual(meta.format, "webp", "Formato final");
   assert(output.length <= 500 * 1024, "Imagem abaixo de 500KB");
-  assert(output.includes(Buffer.from("bot do @tomm")), "Imagem inclui autor no metadata");
+  assert(output.includes(Buffer.from("t00m4ziow bot")), "Imagem inclui autor no metadata");
   assert(output.includes(Buffer.from("Figurinhas do bot")), "Imagem inclui nome do pacote");
   assertEqual(output.toString("ascii", 12, 16), "VP8X", "Imagem declara VP8X");
   assert((output[20] & 0x08) === 0x08, "Imagem declara flag EXIF");
@@ -87,7 +87,7 @@ async function testVideoConversion() {
     assert(meta.width <= 512, "Vídeo respeita limite 512px");
     assertEqual(meta.format, "webp", "Vídeo vira WebP");
     assert(output.length <= 500 * 1024, "Vídeo abaixo de 500KB");
-    assert(output.includes(Buffer.from("bot do @tomm")), "Vídeo inclui autor no metadata");
+    assert(output.includes(Buffer.from("t00m4ziow bot")), "Vídeo inclui autor no metadata");
   } finally {
     try { fs.unlinkSync(inputPath); } catch {}
   }
@@ -103,7 +103,7 @@ function testConfig() {
   assertEqual(config.bot.allowSelfMessages, true, "Permite testar consigo mesmo");
   assertEqual(config.sticker.size, 512, "Sticker base 512");
   assertEqual(config.sticker.maxSizeKB, 500, "Limite 500KB");
-  assertEqual(config.sticker.author, "bot do @tomm", "Autor do sticker");
+  assertEqual(config.sticker.author, "t00m4ziow bot", "Autor do sticker");
   assert(config.bot.reconnectMinMs > 0, "Reconexão mínima configurada");
   assert(config.bot.reconnectMaxMs >= config.bot.reconnectMinMs, "Reconexão máxima configurada");
 }
@@ -355,7 +355,7 @@ function testConverterHelpers() {
   assert(!source.includes("crop="), "Vídeo não recorta");
 
   const exif = _private.createStickerExif();
-  assert(exif.includes(Buffer.from("bot do @tomm")), "EXIF contém autor");
+  assert(exif.includes(Buffer.from("t00m4ziow bot")), "EXIF contém autor");
   assert(exif.includes(Buffer.from("Figurinhas do bot")), "EXIF contém pacote");
 
   const tinyWebp = Buffer.concat([

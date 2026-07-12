@@ -28,7 +28,7 @@ module.exports = {
     fps: 15,
     packId: "sticker-bot-local",
     packname: "Figurinhas do bot",
-    author: "bot do @tomm",
+    author: "t00m4ziow bot",
     emojis: ["🤖"],
   },
 
