@@ -224,8 +224,9 @@ function testRankHelpers() {
   const position = rank.getUserPosition(groupA, ana);
   assertEqual(position.position, 2, "Mostra posição do usuário");
   assert(rank.formatRankList(groupRank, "🏆 *Ranking do grupo*").includes("Bia"), "Formata ranking");
-  assert(rank.formatRankList(groupRank, "🏆 *Ranking do grupo*").includes("[id:"), "Ranking mostra ID público");
-  assertEqual(rank.getRankUserId(ana).length, 6, "ID público tem 6 caracteres");
+  assert(rank.formatRankList(groupRank, "🏆 *Ranking do grupo*").includes("[id: 02]"), "Ranking mostra ID público curto");
+  assertEqual(rank.getRankUserId(ana), "01", "Primeiro ID público é 01");
+  assertEqual(rank.getRankUserId(bia), "02", "Segundo ID público é 02");
   assert(rank.formatMyRank(position, "Ana").includes("Posição: #2"), "Formata meu rank");
   assert(rank.formatRankHelp().includes(".rank global"), "Ajuda explica variações");
   assert(!rank.formatRankHelp().includes(".pararrank"), "Ajuda não mostra pararrank");
@@ -241,7 +242,7 @@ function testRankHelpers() {
   const removeMissing = rank.removeUserFromGroupByName(groupA, "Carlos");
   assertEqual(removeMissing.removed.length, 0, "Não remove nome inexistente");
 
-  const removeResult = rank.removeUserGlobally(rank.getRankUserId(bia));
+  const removeResult = rank.removeUserGlobally("2");
   assertEqual(removeResult.removed.length, 1, "Remove usuário pelo ID");
   assert(!rank.rankGroup(groupA).some((item) => item.displayName === "Bia"), "Usuário removido sai do rank");
   assert(rank.rankGlobal().some((item) => item.displayName === "Ana"), "Remoção do grupo mantém outros grupos");
