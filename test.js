@@ -117,6 +117,7 @@ function testBotHelpers() {
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "status@broadcast" } }), "Ignora status");
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "120363@newsletter" } }), "Ignora canais/newsletters");
   assert(!_private.MENU_TEXT.includes(".zerarrank"), "Menu não mostra zerarrank");
+  assert(!_private.MENU_TEXT.includes(".removerank"), "Menu não mostra removerank");
   assert(!_private.MENU_TEXT.includes("Teste consigo mesmo"), "Menu não mostra teste consigo mesmo");
   assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
   assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
@@ -187,6 +188,8 @@ function testRankHelpers() {
   assertEqual(rank.parseRankCommand(".zerarrank").type, "reset", ".zerarrank zera rank");
   assertEqual(rank.parseRankCommand(".zerarrank").scope, "group", ".zerarrank zera grupo atual");
   assertEqual(rank.parseRankCommand(".zerarrank global").scope, "global", ".zerarrank global zera todos");
+  assertEqual(rank.parseRankCommand(".removerank Ana Maria").type, "remove", ".removerank remove usuário");
+  assertEqual(rank.parseRankCommand(".removerank Ana Maria").query, "Ana Maria", ".removerank preserva nome");
   assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
   assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
@@ -232,6 +235,14 @@ function testRankHelpers() {
 
   rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Participante", points: 1, now: 60000 });
   assertEqual(rank.rankGroup(groupA).find((item) => item.participantId === ana).displayName, "Ana", "Não troca nome conhecido por Participante");
+
+  const removeMissing = rank.removeUserFromGroupByName(groupA, "Carlos");
+  assertEqual(removeMissing.removed.length, 0, "Não remove nome inexistente");
+
+  const removeResult = rank.removeUserFromGroupByName(groupA, "bia");
+  assertEqual(removeResult.removed.length, 1, "Remove usuário pelo nome");
+  assert(!rank.rankGroup(groupA).some((item) => item.displayName === "Bia"), "Usuário removido sai do rank");
+  assert(rank.rankGlobal().some((item) => item.displayName === "Ana"), "Remoção do grupo mantém outros grupos");
 
   rank.resetGroupRank(groupA);
   assertEqual(rank.rankGroup(groupA).length, 0, "Zera ranking do grupo atual");
