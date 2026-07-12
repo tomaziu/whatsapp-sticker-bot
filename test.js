@@ -33,7 +33,7 @@ function skip(message) {
 
 async function testImageConversion() {
   console.log("\n[1] Imagem 1:1");
-  const { imageToSticker } = require("./lib/stickerConverter");
+  const { imageToSticker, stickerToImage } = require("./lib/stickerConverter");
 
   const input = await sharp({
     create: {
@@ -55,6 +55,10 @@ async function testImageConversion() {
   assert(output.includes(Buffer.from("Figurinhas do bot")), "Imagem inclui nome do pacote");
   assertEqual(output.toString("ascii", 12, 16), "VP8X", "Imagem declara VP8X");
   assert((output[20] & 0x08) === 0x08, "Imagem declara flag EXIF");
+
+  const convertedBack = await stickerToImage(output);
+  const convertedMeta = await sharp(convertedBack).metadata();
+  assertEqual(convertedMeta.format, "png", "Figurinha vira PNG");
 }
 
 async function testVideoConversion() {
@@ -113,6 +117,11 @@ function testBotHelpers() {
   assert(_private.isMenuCommand(" .MENU "), ".menu é case-insensitive");
   assert(_private.isStickerCommand(" .FIG "), ".fig é case-insensitive");
   assert(_private.isStickerCommand(".sticker"), ".sticker funciona");
+  assert(_private.isProfileStickerCommand(".figpp @teste"), ".figpp reconhecido");
+  assert(_private.isToImageCommand(".toimg"), ".toimg reconhecido");
+  assert(!_private.isToImageCommand(".toimg teste"), ".toimg exige comando exato");
+  assert(_private.isStatusBotCommand(".statusbo"), ".statusbo reconhecido");
+  assert(!_private.isStatusBotCommand(".statusbo teste"), ".statusbo exige comando exato");
   assert(!_private.shouldIgnoreMessage({ key: { fromMe: true, remoteJid: "me@s.whatsapp.net" } }), "Não ignora mensagens próprias");
   _private.rememberBotSentMessage({ key: { id: "bot-response-1" } });
   assert(_private.isBotSentMessage({ key: { id: "bot-response-1" } }), "Identifica resposta enviada pelo bot");
@@ -121,11 +130,16 @@ function testBotHelpers() {
   assert(_private.shouldIgnoreMessage({ key: { remoteJid: "120363@newsletter" } }), "Ignora canais/newsletters");
   assert(!_private.MENU_TEXT.includes(".zerarrank"), "Menu não mostra zerarrank");
   assert(!_private.MENU_TEXT.includes(".removerank"), "Menu não mostra removerank");
+  assert(!_private.MENU_TEXT.includes(".statusbo"), "Menu não mostra statusbo");
+  assert(_private.MENU_TEXT.includes(".figpp"), "Menu mostra figpp");
+  assert(_private.MENU_TEXT.includes(".toimg"), "Menu mostra toimg");
   assert(!_private.MENU_TEXT.includes("Teste consigo mesmo"), "Menu não mostra teste consigo mesmo");
   assert(!_private.MENU_TEXT.includes("Formas de usar"), "Menu não mostra formas de usar");
   assert(!_private.MENU_TEXT.includes("Vídeos"), "Menu não mostra seção de vídeo");
   assert(!_private.MENU_TEXT.includes("FORMATO"), "Menu não mostra seção formato");
   assertEqual(_private.normalizeUserJid("551199999999:12@s.whatsapp.net"), "551199999999@s.whatsapp.net", "Normaliza JID do próprio bot");
+  assertEqual(_private.formatBytes(10 * 1024 * 1024), "10.0 MB", "Formata memória");
+  assertEqual(_private.formatDuration(65000), "1min 5s", "Formata uptime");
 }
 
 async function testRankCommandOutsideGroup() {
@@ -147,10 +161,12 @@ function testMediaParsing() {
 
   const imageMessage = { imageMessage: { caption: ".fig" } };
   const videoMessage = { videoMessage: { caption: ".fig" } };
+  const stickerMessage = { stickerMessage: { isAnimated: false } };
   const wrapped = { ephemeralMessage: { message: imageMessage } };
 
   assertEqual(_private.getMedia(imageMessage).type, "image", "Detecta imagem");
   assertEqual(_private.getMedia(videoMessage).type, "video", "Detecta vídeo/GIF");
+  assertEqual(_private.getSticker(stickerMessage).type, "sticker", "Detecta figurinha");
   assertEqual(_private.getMedia(wrapped).type, "image", "Desembrulha mensagem ephemeral");
   assertEqual(_private.getText({ conversation: ".menu" }), ".menu", "Lê texto simples");
   assertEqual(_private.getText(imageMessage), ".fig", "Lê legenda");
@@ -170,6 +186,34 @@ function testMediaParsing() {
 
   assert(quoted, "Detecta mídia respondida");
   assertEqual(quoted.media.type, "image", "Preserva tipo da mídia respondida");
+
+  const quotedSticker = _private.getQuotedSticker({
+    key: { remoteJid: "chat@s.whatsapp.net" },
+    message: {
+      extendedTextMessage: {
+        text: ".toimg",
+        contextInfo: {
+          stanzaId: "sticker-1",
+          quotedMessage: stickerMessage,
+        },
+      },
+    },
+  });
+
+  assert(quotedSticker, "Detecta figurinha respondida");
+  assertEqual(quotedSticker.sticker.type, "sticker", "Preserva tipo da figurinha respondida");
+
+  const target = _private.getTargetJidFromMessage({
+    message: {
+      extendedTextMessage: {
+        text: ".figpp @Ana",
+        contextInfo: {
+          mentionedJid: ["551188887777:12@s.whatsapp.net"],
+        },
+      },
+    },
+  });
+  assertEqual(target, "551188887777@s.whatsapp.net", "Detecta usuário marcado no .figpp");
 }
 
 function testRankHelpers() {

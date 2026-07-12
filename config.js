@@ -7,6 +7,9 @@ module.exports = {
     myRank: ".meurank",
     resetRank: ".zerarrank",
     removeRank: ".removerank",
+    profileSticker: ".figpp",
+    statusBot: ".statusbo",
+    toImage: ".toimg",
   },
 
   bot: {
