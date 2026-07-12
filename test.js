@@ -119,8 +119,21 @@ function testBotHelpers() {
   assert(!_private.MENU_TEXT.includes("FORMATO"), "Menu não mostra seção formato");
 }
 
+async function testRankCommandOutsideGroup() {
+  console.log("\n[5] Rank fora de grupo");
+  const { _private } = require("./lib/bot");
+
+  const handled = await _private.handleRankCommand(
+    "5511999999999@s.whatsapp.net",
+    { key: { remoteJid: "5511999999999@s.whatsapp.net" }, message: { conversation: ".rank" } },
+    ".rank"
+  );
+
+  assert(handled, "Comando rank em PV é consumido");
+}
+
 function testMediaParsing() {
-  console.log("\n[5] Leitura de mídia");
+  console.log("\n[6] Leitura de mídia");
   const { _private } = require("./lib/bot");
 
   const imageMessage = { imageMessage: { caption: ".fig" } };
@@ -151,7 +164,7 @@ function testMediaParsing() {
 }
 
 function testRankHelpers() {
-  console.log("\n[6] Ranking");
+  console.log("\n[7] Ranking");
   const rank = require("./lib/rank");
   const config = require("./config");
   rank.resetStatsForTests();
@@ -206,7 +219,7 @@ function testRankHelpers() {
 }
 
 function testRecentMediaCache() {
-  console.log("\n[7] Cache de última mídia");
+  console.log("\n[8] Cache de última mídia");
   const { _private } = require("./lib/bot");
   const msg = { key: { id: "media-1" }, message: { imageMessage: {} } };
   const media = _private.getMedia(msg.message);
@@ -222,7 +235,7 @@ function testRecentMediaCache() {
 }
 
 function testConverterHelpers() {
-  console.log("\n[8] Tentativas de vídeo");
+  console.log("\n[9] Tentativas de vídeo");
   const { _private } = require("./lib/stickerConverter");
   const attempts = _private.buildVideoAttempts();
 
@@ -250,7 +263,7 @@ function testConverterHelpers() {
 }
 
 async function testServer() {
-  console.log("\n[9] Servidor QR");
+  console.log("\n[10] Servidor QR");
   const { startServer } = require("./lib/server");
   const server = await startServer(0, () => ({ currentQR: null, status: "waiting" }));
 
@@ -265,6 +278,7 @@ async function run() {
   await testVideoConversion();
   testConfig();
   testBotHelpers();
+  await testRankCommandOutsideGroup();
   testMediaParsing();
   testRankHelpers();
   testRecentMediaCache();
