@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "reset-session": "node scripts/reset-session.js",
+    "reset-rank": "node scripts/reset-rank.js",
     "test": "node test.js"
   },
   "dependencies": {

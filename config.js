@@ -5,6 +5,7 @@ module.exports = {
     rank: ".rank",
     startRank: ".iniciarrank",
     myRank: ".meurank",
+    resetRank: ".zerarrank",
   },
 
   bot: {

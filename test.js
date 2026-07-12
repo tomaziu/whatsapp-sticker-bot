@@ -3,6 +3,9 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const config = require("./config");
+
+config.paths.rankStats = path.join(os.tmpdir(), `sticker-rank-test-${process.pid}.json`);
 
 let passed = 0;
 let failed = 0;
@@ -179,6 +182,7 @@ function testRankHelpers() {
   assertEqual(rank.parseRankCommand(".rank global").type, "global", ".rank global mostra global");
   assertEqual(rank.parseRankCommand(".meurank").type, "me", ".meurank mostra posição");
   assertEqual(rank.parseRankCommand(".iniciarrank").type, "start", ".iniciarrank ativa grupo");
+  assertEqual(rank.parseRankCommand(".zerarrank").type, "reset", ".zerarrank zera rank");
   assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
   assertEqual(rank.getMessageScore({ media: { type: "image" } }), config.rank.points.media, "Mídia pontua");
@@ -220,6 +224,10 @@ function testRankHelpers() {
   assertEqual(rank.sanitizeDisplayName("5511999999999@s.whatsapp.net"), "", "Remove JID como nome");
   assertEqual(rank.getSafeDisplayName({ displayName: "5511999999999" }), "Participante", "Fallback sem número no rank");
   assert(!rank.formatRankList([{ displayName: "5511999999999", points: 1, messages: 1 }], "Rank").includes("5511999999999"), "Ranking não mostra número");
+
+  rank.resetGlobalRank();
+  assertEqual(rank.rankGlobal().length, 0, "Zera ranking global");
+  assert(rank.isRankEnabled(groupA), "Mantém grupos ativados ao zerar");
 }
 
 function testRecentMediaCache() {
