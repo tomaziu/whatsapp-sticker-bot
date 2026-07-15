@@ -1,0 +1,123 @@
+GUIA RAPIDO - VPS ORACLE + WHATSAPP STICKER BOT
+
+1) COMO ENTRAR NA VPS
+
+No seu PC, abra o PowerShell e rode:
+
+cd C:\Users\teste123\Downloads\oracle_key
+ssh -i .\ssh-key-2026-07-10.key ubuntu@137.131.175.155
+
+Se der certo, vai aparecer algo parecido com:
+
+ubuntu@bot-vcn:~$
+
+Isso significa que voce esta dentro da VPS.
+
+
+2) COMO VER SE O BOT ESTA RODANDO
+
+Dentro da VPS, rode:
+
+pm2 status
+
+Se aparecer "sticker-bot" com status "online", o bot esta ligado.
+
+
+3) COMO PAUSAR / PARAR O BOT
+
+Dentro da VPS:
+
+pm2 stop sticker-bot
+
+
+4) COMO LIGAR O BOT DE NOVO
+
+Dentro da VPS:
+
+pm2 start sticker-bot
+
+Se esse comando nao funcionar, rode:
+
+cd ~/whatsapp-sticker-bot
+pm2 start index.js --name sticker-bot
+pm2 save
+
+
+5) COMO REINICIAR O BOT
+
+Dentro da VPS:
+
+pm2 restart sticker-bot
+
+
+6) COMO VER OS LOGS DO BOT
+
+Dentro da VPS:
+
+pm2 logs sticker-bot
+
+Para sair dos logs, aperte:
+
+CTRL + C
+
+
+7) COMO ABRIR A PAGINA DO QR
+
+No navegador do seu PC, abra:
+
+http://137.131.175.155:3000
+
+Se a pagina nao abrir, confira:
+
+- O bot esta online no PM2?
+- A porta 3000 esta liberada na Oracle?
+- O firewall da VPS esta liberado?
+
+Comandos uteis dentro da VPS:
+
+sudo ufw status
+ss -ltnp | grep 3000
+
+
+8) COMO TESTAR O BOT NO WHATSAPP
+
+Depois que o bot estiver conectado:
+
+.menu
+
+Para criar figurinha:
+
+Envie uma imagem, video ou GIF com legenda:
+
+.fig
+
+Tambem funciona:
+
+.sticker
+
+
+9) COMO SAIR DA VPS
+
+Dentro da VPS, rode:
+
+exit
+
+Ou feche o PowerShell.
+
+
+10) OBSERVACOES IMPORTANTES
+
+- Nao compartilhe a chave SSH:
+  C:\Users\teste123\Downloads\oracle_key\ssh-key-2026-07-10.key
+
+- Se a porta 3000 estiver aberta para 0.0.0.0/0, qualquer pessoa pode abrir a pagina.
+
+- Para deixar a pagina acessivel so da sua internet, na Oracle troque a origem da regra 3000 de:
+  0.0.0.0/0
+
+  para:
+  SEU_IP_PUBLICO/32
+
+- Se seu IP publico mudar, precisa atualizar essa regra.
+
+- O WhatsApp continua funcionando mesmo se voce fechar a pagina do QR. A pagina so serve para conectar/ver status.

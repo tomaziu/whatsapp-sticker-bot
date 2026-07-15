@@ -1,15 +1,40 @@
 module.exports = {
   commands: {
     menu: ".menu",
+    devMenu: ".menudev",
     sticker: [".fig", ".sticker"],
+    stickerCrop: ".figcrop",
+    pinterestSticker: ".figpin",
     rank: ".rank",
     startRank: ".iniciarrank",
     myRank: ".meurank",
     resetRank: ".zerarrank",
     removeRank: ".removerank",
+    shop: ".loja",
+    buyTag: ".comprar",
+    useTag: ".usartag",
+    myTags: ".minhastags",
+    removeTag: ".removertag",
     profileSticker: ".figpp",
+    textSticker: ".figtxt",
+    raffle: ".sorteio",
+    daily: ".daily",
+    level: ".level",
+    topLevel: ".toplevel",
+    achievements: ".conquistas",
+    profile: ".perfil",
     statusBot: ".statusbo",
+    errors: ".erros",
+    maintenance: ".manutencao",
+    restart: ".reiniciar",
+    deleteMessages: ".apagarmsg",
     toImage: ".toimg",
+    audioEffects: {
+      deepVoice: ".vozgrave",
+      thinVoice: ".vozfina",
+      fastAudio: ".veloz",
+      slowAudio: ".lento",
+    },
   },
 
   bot: {
@@ -18,6 +43,7 @@ module.exports = {
     browser: ["Sticker Bot", "Chrome", "1.0.0"],
     reconnectMinMs: 5000,
     reconnectMaxMs: 60000,
+    maxPinterestLinks: 5,
   },
 
   sticker: {
@@ -35,6 +61,9 @@ module.exports = {
   rank: {
     enabled: true,
     topLimit: 10,
+    levelTopLimit: 10,
+    levelBaseXp: 100,
+    levelGrowth: 1.45,
     points: {
       text: 1,
       media: 2,
@@ -42,6 +71,41 @@ module.exports = {
     },
     antiSpamMs: 5000,
   },
+
+  shop: {
+    tags: [
+      { id: "vulto", name: "🌫️ Vulto do Chat", price: 3000, rarity: "Comum", dailyBonus: 0.1 },
+      { id: "energia", name: "🧃 Energia Duvidosa", price: 5000, rarity: "Comum", dailyBonus: 0.12 },
+      { id: "presenca", name: "🪩 Presença Confirmada", price: 7500, rarity: "Comum", dailyBonus: 0.15 },
+      { id: "trovao", name: "⚡ Eco do Trovão", price: 12000, rarity: "Rara", dailyBonus: 0.22 },
+      { id: "mutacao", name: "🧬 Mutação Social", price: 18000, rarity: "Rara", dailyBonus: 0.28 },
+      { id: "sombra", name: "🕶️ Sombra Elegante", price: 25000, rarity: "Rara", dailyBonus: 0.35 },
+      { id: "dragao", name: "🐉 Dragão do Zap", price: 40000, rarity: "Épica", dailyBonus: 0.5 },
+      { id: "diamante", name: "💎 Aura Diamante", price: 60000, rarity: "Épica", dailyBonus: 0.65 },
+      { id: "monarca", name: "👑 Monarca do Caos", price: 100000, rarity: "Lendária", dailyBonus: 0.9 },
+      { id: "entidade", name: "🔥 Entidade Suprema", price: 150000, rarity: "Lendária", dailyBonus: 1.2 },
+      { id: "dev", name: "👽 DEV", price: 0, rarity: "Exclusiva", dailyBonus: 2, locked: true },
+    ],
+  },
+
+  daily: {
+    basePoints: 20,
+    cooldownMs: 24 * 60 * 60 * 1000,
+    rarityBonus: {
+      Comum: 0.1,
+      Rara: 0.25,
+      Épica: 0.5,
+      Lendária: 1,
+      Exclusiva: 2,
+    },
+  },
+
+  profileThemes: [
+    { id: "neon", name: "💚 Neon", price: 5000, frame: "neon" },
+    { id: "royal", name: "👑 Royal", price: 12000, frame: "royal" },
+    { id: "cosmico", name: "🌌 Cósmico", price: 25000, frame: "cosmic" },
+    { id: "t00m", name: "👽 DEV", price: 0, frame: "owner", locked: true },
+  ],
 
   qrServerPort: 3000,
 
