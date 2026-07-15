@@ -618,6 +618,12 @@ function testRankHelpers() {
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("Level:"), "Perfil mostra level");
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("Conquistas:"), "Perfil mostra conquistas");
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("Daily: 33 pts"), "Perfil mostra daily");
+  const profileLevelUser = "554499999999@s.whatsapp.net";
+  rank.addRankPoints({ groupId: groupB, participantId: profileLevelUser, displayName: "Perfil", points: 1, now: 91500 });
+  rank.addRankPoints({ groupId: groupA, participantId: profileLevelUser, displayName: "Perfil", points: 3, now: 91600 });
+  assert(rank.formatLevelCard({ groupId: groupA, participantId: profileLevelUser, displayName: "Perfil" }).includes("Total XP: 3"), ".level usa XP do grupo atual");
+  assert(rank.formatUserProfile({ groupId: groupA, participantId: profileLevelUser, displayName: "Perfil" }).includes("Level: 1 (3 XP)"), ".perfil usa o mesmo XP do .level");
+  assertEqual(rank.getLevelStatsForContext(groupA, profileLevelUser).points, 3, "Helper de level pega grupo atual");
   assert(rank.formatProfileThemeShop(ana).includes("🎨 TEMAS DO PERFIL"), "Loja de temas tem visual");
   assert(rank.formatProfileThemeShop(ana).includes("🔒 👽 DEV"), "Loja mostra tema exclusivo bloqueado");
   assertEqual(rank.buyProfileTheme(temaUser, "t00m").reason, "locked", "Tema exclusivo bloqueia usuário comum");
