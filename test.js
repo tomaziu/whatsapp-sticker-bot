@@ -1,4 +1,4 @@
-const sharp = require("sharp");
+﻿const sharp = require("sharp");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -51,7 +51,7 @@ async function testImageConversion() {
   assertEqual(meta.height, 512, "Altura final");
   assertEqual(meta.format, "webp", "Formato final");
   assert(output.length <= 500 * 1024, "Imagem abaixo de 500KB");
-  assert(output.includes(Buffer.from("t00m4ziow bot")), "Imagem inclui autor no metadata");
+  assert(output.includes(Buffer.from("╳ T00M4ZIOW BOT ╳")), "Imagem inclui autor no metadata");
   assert(output.includes(Buffer.from("Figurinhas do bot")), "Imagem inclui nome do pacote");
   assertEqual(output.toString("ascii", 12, 16), "VP8X", "Imagem declara VP8X");
   assert((output[20] & 0x08) === 0x08, "Imagem declara flag EXIF");
@@ -131,7 +131,7 @@ async function testVideoConversion() {
     assert(meta.width <= 512, "Vídeo respeita limite 512px");
     assertEqual(meta.format, "webp", "Vídeo vira WebP");
     assert(output.length <= 500 * 1024, "Vídeo abaixo de 500KB");
-    assert(output.includes(Buffer.from("t00m4ziow bot")), "Vídeo inclui autor no metadata");
+    assert(output.includes(Buffer.from("╳ T00M4ZIOW BOT ╳")), "Vídeo inclui autor no metadata");
   } finally {
     try { fs.unlinkSync(inputPath); } catch {}
   }
@@ -147,7 +147,7 @@ async function testTextStickerConversion() {
   assertEqual(meta.width, 512, "Texto fica com largura 512");
   assertEqual(meta.height, 512, "Texto fica com altura 512");
   assertEqual(meta.format, "webp", "Texto vira WebP");
-  assert(output.includes(Buffer.from("t00m4ziow bot")), "Texto inclui autor no metadata");
+  assert(output.includes(Buffer.from("╳ T00M4ZIOW BOT ╳")), "Texto inclui autor no metadata");
   assertEqual(_private.escapeXml("<oi>"), "&lt;oi&gt;", "Texto escapa XML");
   assertEqual(_private.sanitizeStickerText("   "), "t00m4ziow", "Texto vazio usa fallback");
   assert(_private.wrapStickerText("essa frase grande precisa quebrar").length > 1, "Texto grande quebra linhas");
@@ -159,7 +159,7 @@ async function testTextStickerConversion() {
     const rgbMeta = await sharp(rgb, { animated: true }).metadata();
     assertEqual(rgbMeta.format, "webp", "RGB vira WebP");
     assert(rgbMeta.pages > 1, "RGB gera sticker animado");
-    assert(rgb.includes(Buffer.from("t00m4ziow bot")), "RGB inclui autor no metadata");
+    assert(rgb.includes(Buffer.from("╳ T00M4ZIOW BOT ╳")), "RGB inclui autor no metadata");
   } catch {
     skip("ffmpeg indisponível; teste de figtxt rgb pulado");
   }
@@ -215,6 +215,9 @@ function testConfig() {
 
   assert(config.commands.sticker.includes(".fig"), "Comando .fig ativo");
   assert(config.commands.sticker.includes(".sticker"), "Comando .sticker ativo");
+  assertEqual(config.commands.ai, ".ia", "Comando .ia ativo");
+  assertEqual(config.commands.aiOn, ".iaon", "Comando .iaon ativo");
+  assertEqual(config.commands.aiOff, ".iaoff", "Comando .iaoff ativo");
   assertEqual(config.commands.stickerCrop, ".figcrop", "Comando .figcrop ativo");
   assertEqual(config.commands.pinterestSticker, ".figpin", "Comando .figpin ativo");
   assertEqual(config.bot.maxPinterestLinks, 5, "Limite de links Pinterest");
@@ -223,10 +226,14 @@ function testConfig() {
   assertEqual(config.commands.textSticker, ".figtxt", "Comando .figtxt ativo");
   assertEqual(config.commands.raffle, ".sorteio", "Comando .sorteio ativo");
   assertEqual(config.commands.daily, ".daily", "Comando .daily ativo");
+  assertEqual(config.commands.roulette, ".roleta", "Comando .roleta ativo");
+  assertEqual(config.commands.rouletteDev, ".roletadev", "Comando .roletadev ativo");
   assertEqual(config.commands.level, ".level", "Comando .level ativo");
   assertEqual(config.commands.topLevel, ".toplevel", "Comando .toplevel ativo");
   assertEqual(config.commands.achievements, ".conquistas", "Comando .conquistas ativo");
   assertEqual(config.commands.profile, ".perfil", "Comando .perfil ativo");
+  assertEqual(config.commands.xboxDeals, ".xboxpromo", "Comando .xboxpromo ativo");
+  assertEqual(config.commands.ai, ".ia", "Comando .ia ativo");
   assertEqual(config.commands.shop, ".loja", "Comando .loja ativo");
   assertEqual(config.commands.errors, ".erros", "Comando .erros ativo");
   assertEqual(config.commands.maintenance, ".manutencao", "Comando .manutencao ativo");
@@ -236,18 +243,25 @@ function testConfig() {
   assertEqual(new Set(config.shop.tags.filter((tag) => !tag.locked).map((tag) => tag.price)).size, 10, "Tags compráveis têm preços diferentes");
   assert(config.shop.tags.find((tag) => tag.id === "entidade").price > config.shop.tags.find((tag) => tag.id === "vulto").price, "Tags avançadas são mais caras");
   assertEqual(config.daily.basePoints, 20, "Daily base configurado");
+  assert(config.roulette.prizes.some((prize) => prize.id === "100" && prize.points === 100), "Roleta tem prêmio de 100 pontos");
   assertEqual(config.shop.tags.find((tag) => tag.id === "entidade").dailyBonus, 1.2, "Tag mais cara dá bônus maior");
   assert(config.profileThemes.some((theme) => theme.id === "t00m" && theme.locked), "Tema exclusivo configurado");
   assertEqual(config.bot.allowSelfMessages, true, "Permite testar consigo mesmo");
   assertEqual(config.sticker.size, 512, "Sticker base 512");
   assertEqual(config.sticker.maxSizeKB, 500, "Limite 500KB");
-  assertEqual(config.sticker.author, "t00m4ziow bot", "Autor do sticker");
+  assertEqual(config.sticker.author, "╳ T00M4ZIOW BOT ╳", "Autor do sticker");
+  assertEqual(config.ai.cooldownMs, 2000, "Cooldown da IA em 2 segundos");
   assertEqual(config.commands.audioEffects.deepVoice, ".vozgrave", "Comando .vozgrave ativo");
   assertEqual(config.commands.audioEffects.thinVoice, ".vozfina", "Comando .vozfina ativo");
   assertEqual(config.commands.audioEffects.fastAudio, ".veloz", "Comando .veloz ativo");
   assertEqual(config.commands.audioEffects.slowAudio, ".lento", "Comando .lento ativo");
   assert(config.bot.reconnectMinMs > 0, "Reconexão mínima configurada");
   assert(config.bot.reconnectMaxMs >= config.bot.reconnectMinMs, "Reconexão máxima configurada");
+  assert(config.xboxDeals.url.includes("xbox.com/pt-BR"), "Xbox promo usa região Brasil");
+  assert(config.xboxDeals.cacheMs > 0, "Xbox promo usa cache");
+  assert(config.ai.endpoint.includes("integrate.api.nvidia.com"), "IA usa endpoint NVIDIA");
+  assert(config.ai.maxPromptChars > 0, "IA limita prompt");
+  assertEqual(config.ai.model, "meta/llama-3.1-8b-instruct", "IA usa modelo rápido e mais inteligente");
 }
 
 function testBotHelpers() {
@@ -287,6 +301,10 @@ function testBotHelpers() {
   assert(!_private.isRaffleCommand(".sorteio teste"), ".sorteio exige comando exato");
   assert(_private.isDailyCommand(".daily"), ".daily reconhecido");
   assert(!_private.isDailyCommand(".daily teste"), ".daily exige comando exato");
+  assert(_private.isRouletteCommand(".roleta"), ".roleta reconhecido");
+  assert(!_private.isRouletteCommand(".roleta teste"), ".roleta exige comando exato");
+  assert(_private.isRouletteDevCommand(".roletadev"), ".roletadev reconhecido");
+  assert(!_private.isRouletteDevCommand(".roletadev teste"), ".roletadev exige comando exato");
   assertEqual(_private.parseLevelCommand(".level").type, "level", ".level reconhecido");
   assertEqual(_private.parseLevelCommand(".level Ana").query, "Ana", ".level aceita alvo");
   assertEqual(_private.parseLevelCommand(".toplevel").type, "topLevel", ".toplevel reconhecido");
@@ -298,6 +316,18 @@ function testBotHelpers() {
   assertEqual(_private.parseProfileCommand(".perfil comprar neon").type, "buyTheme", ".perfil comprar compra tema");
   assertEqual(_private.parseProfileCommand(".perfil tema neon").type, "equipTheme", ".perfil tema equipa tema");
   assertEqual(_private.parseProfileCommand(".perfil teste").type, "invalid", ".perfil inválido");
+  assertEqual(_private.parseXboxDealsCommand(".xboxpromo").type, "deals", ".xboxpromo reconhecido");
+  assertEqual(_private.parseXboxDealsCommand(".xboxpromo").limit, 20, ".xboxpromo mostra 20 jogos");
+  assertEqual(_private.parseXboxDealsCommand(".xboxpromo 10").type, "invalid", ".xboxpromo não aceita limite");
+  assertEqual(_private.parseXboxDealsCommand(".xboxpromo teste").type, "invalid", ".xboxpromo valida argumentos");
+  assertEqual(_private.parseAiCommand(".ia olá bot").type, "ask", ".ia reconhecido");
+  assertEqual(_private.parseAiCommand(".ia").type, "missing", ".ia exige texto");
+  assertEqual(_private.parseAiControlCommand(".iaon").action, "on", ".iaon reconhecido");
+  assertEqual(_private.parseAiControlCommand(".iaoff").action, "off", ".iaoff reconhecido");
+  assertEqual(_private.parseAiControlCommand(".iaoff").silent, false, ".iaoff avisa usuários");
+  assertEqual(_private.parseAiControlCommand(".iaoff nologs").action, "off", ".iaoff nologs reconhecido");
+  assertEqual(_private.parseAiControlCommand(".iaoff nologs").silent, true, ".iaoff nologs silencia aviso");
+  assertEqual(_private.parseAiControlCommand(".iaoff agora").action, "invalid", ".iaoff valida argumentos");
   assertEqual(_private.parseDevAssetCommand(".devtag dar @ana dev").type, "grant", ".devtag dar reconhecido");
   assertEqual(_private.parseDevAssetCommand(".devtag tirar @ana dev").type, "revoke", ".devtag tirar reconhecido");
   assertEqual(_private.parseDevAssetCommand(".devtema usar @ana t00m").asset, "theme", ".devtema reconhecido");
@@ -305,6 +335,8 @@ function testBotHelpers() {
   assertEqual(_private.parseDevLevelCommand(".devlevel tirar @ana 50").type, "remove", ".devlevel tirar reconhecido");
   assertEqual(_private.parseDevLevelCommand(".devlevel setar @ana 500").type, "set", ".devlevel setar reconhecido");
   assertEqual(_private.parseDevLevelCommand(".devlevel resetar @ana").type, "reset", ".devlevel resetar reconhecido");
+  assertEqual(_private.parseDevLevelCommand(".devlevel resetgrupo").type, "resetGroup", ".devlevel resetgrupo reconhecido");
+  assertEqual(_private.parseDevLevelCommand(".devlevel resetgrupo agora").type, "invalid", ".devlevel resetgrupo exige comando exato");
   assert(_private.isErrorsCommand(".erros"), ".erros reconhecido");
   assert(!_private.isErrorsCommand(".erros teste"), ".erros exige comando exato");
   assert(_private.isRestartCommand(".reiniciar"), ".reiniciar reconhecido");
@@ -336,28 +368,37 @@ function testBotHelpers() {
   assert(!_private.MENU_TEXT.includes(".removerank"), "Menu não mostra removerank");
   assert(!_private.MENU_TEXT.includes(".statusbo"), "Menu não mostra statusbo");
   assert(!_private.MENU_TEXT.includes(".menudev"), "Menu não mostra menudev");
+  assert(!_private.MENU_TEXT.includes(".iaon"), "Menu não mostra iaon");
+  assert(!_private.MENU_TEXT.includes(".iaoff"), "Menu não mostra iaoff");
   assert(!_private.MENU_TEXT.includes(".erros"), "Menu não mostra erros");
   assert(!_private.MENU_TEXT.includes(".manutencao"), "Menu não mostra manutenção");
   assert(!_private.MENU_TEXT.includes(".reiniciar"), "Menu não mostra reiniciar");
   assert(!_private.MENU_TEXT.includes(".devtag"), "Menu não mostra devtag");
   assert(!_private.MENU_TEXT.includes(".devtema"), "Menu não mostra devtema");
+  assert(!_private.MENU_TEXT.includes("╳ T00M4ZIOW BOT ╳"), "Menu não mostra assinatura");
   assert(_private.DEV_MENU_TEXT.includes(".menudev"), "Menu dev mostra menudev");
   assert(_private.DEV_MENU_TEXT.includes(".statusbo"), "Menu dev mostra statusbo");
   assert(_private.DEV_MENU_TEXT.includes(".erros"), "Menu dev mostra erros");
   assert(_private.DEV_MENU_TEXT.includes(".manutencao on/off/status"), "Menu dev mostra manutenção");
+  assert(_private.DEV_MENU_TEXT.includes(".iaon"), "Menu dev mostra iaon");
+  assert(_private.DEV_MENU_TEXT.includes(".iaoff"), "Menu dev mostra iaoff");
+  assert(_private.DEV_MENU_TEXT.includes(".iaoff nologs"), "Menu dev mostra iaoff nologs");
   assert(_private.DEV_MENU_TEXT.includes(".reiniciar"), "Menu dev mostra reiniciar");
-  assert(_private.DEV_MENU_TEXT.includes(".apagarmsg <quantidade>"), "Menu dev mostra apagarmsg");
+  assert(!_private.DEV_MENU_TEXT.includes(".apagarmsg"), "Menu dev não mostra apagarmsg");
   assert(_private.DEV_MENU_TEXT.includes(".zerarrank global"), "Menu dev mostra zerarrank global");
   assert(_private.DEV_MENU_TEXT.includes(".removerank <nome/id>"), "Menu dev mostra removerank");
+  assert(_private.DEV_MENU_TEXT.includes(".roletadev"), "Menu dev mostra roleta dev");
   assert(_private.DEV_MENU_TEXT.includes(".devlevel dar @user <xp>"), "Menu dev mostra gerenciar level");
+  assert(_private.DEV_MENU_TEXT.includes(".devlevel resetgrupo"), "Menu dev mostra reset level do grupo");
   assert(_private.DEV_MENU_TEXT.includes("✦ TAGS"), "Menu dev agrupa tags");
   assert(_private.DEV_MENU_TEXT.includes("✦ TEMAS"), "Menu dev agrupa temas");
   assert(_private.DEV_MENU_TEXT.includes(".devtag dar @user <tag>"), "Menu dev mostra gerenciar tags");
   assert(_private.DEV_MENU_TEXT.includes(".devtema dar @user <tema>"), "Menu dev mostra gerenciar temas");
-  assert(_private.DEV_MENU_TEXT.includes("mostra status"), "Menu dev explica statusbo");
-  assert(_private.DEV_MENU_TEXT.includes("zera o ranking apenas do grupo atual"), "Menu dev explica zerarrank");
+  assert(_private.DEV_MENU_TEXT.includes("status, memória e uptime"), "Menu dev explica statusbo");
+  assert(_private.DEV_MENU_TEXT.includes("zera só o grupo atual"), "Menu dev explica zerarrank");
   assert(!_private.DEV_MENU_TEXT.includes(".fig\n"), "Menu dev não mostra comando do menu normal");
   assert(!_private.DEV_MENU_TEXT.includes(".rank\n"), "Menu dev não mostra rank normal");
+  assert(!_private.DEV_MENU_TEXT.includes("╳ T00M4ZIOW BOT ╳"), "Menu dev não mostra assinatura");
   assert(_private.MENU_TEXT.includes(".perfil"), "Menu mostra perfil");
   assert(_private.MENU_TEXT.includes(".perfil temas"), "Menu mostra temas do perfil");
   assert(_private.MENU_TEXT.includes(".figpp"), "Menu mostra figpp");
@@ -366,7 +407,11 @@ function testBotHelpers() {
   assert(_private.MENU_TEXT.includes(".figtxt rgb <texto>"), "Menu mostra figtxt rgb");
   assert(_private.MENU_TEXT.includes(".toimg"), "Menu mostra toimg");
   assert(_private.MENU_TEXT.includes(".sorteio"), "Menu mostra sorteio");
+  assert(_private.MENU_TEXT.includes(".xboxpromo"), "Menu mostra xboxpromo");
+  assert(_private.MENU_TEXT.includes(".ia <texto>"), "Menu mostra ia");
   assert(_private.MENU_TEXT.includes(".daily"), "Menu mostra daily");
+  assert(_private.MENU_TEXT.includes(".roleta"), "Menu mostra roleta");
+  assert(!_private.MENU_TEXT.includes(".roletadev"), "Menu normal não mostra roletadev");
   assert(_private.MENU_TEXT.includes(".level"), "Menu mostra level");
   assert(_private.MENU_TEXT.includes(".conquistas"), "Menu mostra conquistas");
   assert(_private.MENU_TEXT.includes(".toplevel"), "Menu mostra toplevel");
@@ -394,6 +439,13 @@ function testBotHelpers() {
     ],
   }).length, 3, "Lista apenas participantes reais do sorteio");
   assert(_private.formatStatusBot().includes("Manutenção:"), "Status mostra manutenção");
+  assert(_private.formatStatusBot().includes("IA:"), "Status mostra estado da IA");
+  assert(_private.handleAiControlCommand({ action: "off", silent: false }).includes("desativada"), "Desliga IA com aviso");
+  assert(_private.formatStatusBot().includes("IA: desativada"), "Status mostra IA desligada");
+  assert(_private.handleAiControlCommand({ action: "off", silent: true }).includes("silencioso"), "Desliga IA silenciosa");
+  assert(_private.formatStatusBot().includes("IA: desativada silenciosa"), "Status mostra IA silenciosa");
+  assert(_private.handleAiControlCommand({ action: "on" }).includes("ativada"), "Liga IA");
+  _private.resetAiControlForTests();
   assert(_private.formatRecentErrors().includes("Últimos erros/logs"), ".erros formata logs");
   assert(_private.handleMaintenanceCommand({ action: "on" }).includes("ativada"), "Liga manutenção");
   assert(_private.shouldBlockForMaintenance({ key: { fromMe: false } }, ".menu", null), "Manutenção bloqueia comando de terceiros");
@@ -407,6 +459,123 @@ function testBotHelpers() {
   _private.rememberRecentMessage({ key: { remoteJid: "grupo-delete@g.us", id: "msg-2", participant: "b@s.whatsapp.net" } });
   _private.rememberRecentMessage({ key: { remoteJid: "grupo-delete@g.us", id: "cmd-delete", fromMe: true } });
   assertEqual(_private.getRecentMessageKeys("grupo-delete@g.us", 2, "cmd-delete").map((key) => key.id).join(","), "msg-2,msg-1", ".apagarmsg seleciona últimas mensagens sem o comando");
+}
+
+function testXboxDealsHelpers() {
+  console.log("\n[12] Xbox promo");
+  const xboxDeals = require("./lib/xboxDeals");
+
+  const state = {
+    core2: {
+      channels: {
+        channelData: {
+          "BROWSE_CHANNELID=DYNAMICCHANNEL.GAMEDEALS_FILTERS=": {
+            data: {
+              products: [
+                { productId: "GAME1" },
+                { productId: "GAME2" },
+                { productId: "FREE1" },
+              ],
+            },
+          },
+        },
+      },
+      products: {
+        productSummaries: {
+          GAME1: {
+            productId: "GAME1",
+            title: "Jogo Barato",
+            specificPrices: {
+              purchaseable: [{
+                listPrice: 19.99,
+                msrp: 199.99,
+                currency: "BRL",
+                discountPercentage: 90,
+                endDateUtc: "07/21/2026 09:59:59",
+              }],
+            },
+          },
+          GAME2: {
+            productId: "GAME2",
+            title: "Jogo Médio",
+            specificPrices: {
+              purchaseable: [{
+                listPrice: 49.95,
+                msrp: 99.9,
+                currency: "BRL",
+                discountPercentage: 50,
+              }],
+            },
+          },
+          FREE1: {
+            productId: "FREE1",
+            title: "Sem Desconto",
+            specificPrices: {
+              purchaseable: [{
+                listPrice: 10,
+                msrp: 10,
+                currency: "BRL",
+                discountPercentage: 0,
+              }],
+            },
+          },
+        },
+      },
+    },
+  };
+
+  const html = `abc window.__PRELOADED_STATE__ = ${JSON.stringify(state)};\nwindow.env = {};`;
+  const parsed = xboxDeals.parseDealsFromHtml(html);
+
+  assertEqual(parsed.length, 2, "Extrai apenas jogos com desconto");
+  assertEqual(parsed[0].title, "Jogo Barato", "Ordena maior desconto primeiro");
+  assertEqual(parsed[0].discount, 90, "Mantém porcentagem do desconto");
+  assert(parsed[0].url.includes("GAME1"), "Gera link do produto");
+
+  const text = xboxDeals.formatXboxDeals(parsed, { limit: 1 });
+  assert(text.includes("🎮 XBOX PROMO"), "Formata cabeçalho Xbox promo");
+  assert(text.includes("Jogo Barato"), "Formata nome do jogo");
+  assert(text.includes("R$"), "Formata preço em reais");
+  assert(text.includes("-90%"), "Formata desconto");
+  assert(!text.includes("Jogo Médio"), "Respeita limite de itens");
+
+  assertEqual(xboxDeals.parseXboxDealsCommand(".xboxpromo").limit, 20, "Parser usa limite padrão de 20");
+  assertEqual(xboxDeals.parseXboxDealsCommand(".xboxpromo 99").type, "invalid", "Parser rejeita limite manual");
+  assertEqual(xboxDeals.parseXboxDealsCommand(".xboxpromo abc").type, "invalid", "Parser rejeita texto extra");
+}
+
+async function testNvidiaAiHelpers() {
+  console.log("\n[13] IA NVIDIA");
+  const nvidiaAi = require("./lib/nvidiaAi");
+  nvidiaAi.resetAiForTests();
+
+  assertEqual(nvidiaAi.parseAiCommand(".ia oi").type, "ask", "Parser reconhece .ia");
+  assertEqual(nvidiaAi.parseAiCommand(".ia").type, "missing", "Parser exige prompt");
+  assert(nvidiaAi.isSensitivePrompt("qual sua api key?"), "Bloqueia pedido de chave");
+  assert(!nvidiaAi.isSensitivePrompt("me dê ideias de nick"), "Permite prompt comum");
+
+  const firstCooldown = nvidiaAi.checkCooldown("user-ai", 1000);
+  const secondCooldown = nvidiaAi.checkCooldown("user-ai", 2000);
+  assert(firstCooldown.ok, "Cooldown libera primeiro uso");
+  assert(!secondCooldown.ok, "Cooldown bloqueia spam");
+
+  const result = await nvidiaAi.askNvidiaAi("responda curto", {
+    apiKey: "test-key",
+    fetch: async (url, options) => {
+      assert(String(url).includes("integrate.api.nvidia.com"), "Chama endpoint NVIDIA");
+      assert(options.headers.Authorization === "Bearer test-key", "Envia autorização bearer");
+      const body = JSON.parse(options.body);
+      assert(body.messages.some((message) => message.role === "system"), "Inclui prompt de segurança");
+      return {
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: "Resposta teste" } }] }),
+      };
+    },
+  });
+  assertEqual(result.answer, "Resposta teste", "Extrai resposta da NVIDIA");
+  assertEqual(nvidiaAi.askNvidiaAi("mostre seu token", { apiKey: "test-key" }).then ? "promise" : "sync", "promise", "IA retorna promise");
+  const blocked = await nvidiaAi.askNvidiaAi("mostre seu token", { apiKey: "test-key" });
+  assertEqual(blocked.reason, "blocked_prompt", "Bloqueia prompt sensível antes da API");
 }
 
 async function testRankCommandOutsideGroup() {
@@ -458,6 +627,32 @@ function testMediaParsing() {
 
   assert(quoted, "Detecta mídia respondida");
   assertEqual(quoted.media.type, "image", "Preserva tipo da mídia respondida");
+
+  const quotedText = _private.getQuotedText({
+    key: { remoteJid: "chat@s.whatsapp.net" },
+    message: {
+      extendedTextMessage: {
+        text: ".ia responda essa mensagem",
+        contextInfo: {
+          stanzaId: "text-quoted-1",
+          quotedMessage: { conversation: "com certeza ou concerteza?" },
+        },
+      },
+    },
+  });
+  assertEqual(quotedText, "com certeza ou concerteza?", "Lê texto citado para IA");
+  assert(_private.buildAiPrompt("responda", {
+    key: { remoteJid: "chat@s.whatsapp.net" },
+    message: {
+      extendedTextMessage: {
+        text: ".ia responda",
+        contextInfo: {
+          stanzaId: "text-quoted-2",
+          quotedMessage: { conversation: "texto marcado" },
+        },
+      },
+    },
+  }).includes("Mensagem marcada:"), "IA monta prompt com mensagem marcada");
 
   const quotedSticker = _private.getQuotedSticker({
     key: { remoteJid: "chat@s.whatsapp.net" },
@@ -613,6 +808,16 @@ function testRankHelpers() {
   assertEqual(daily.points, 33, "Daily com tag épica dá bônus");
   assertEqual(rank.claimDaily({ groupId: groupA, participantId: ana, displayName: "Ana", now: 91000 }).reason, "cooldown", "Daily tem cooldown");
   assertEqual(rank.getUserWallet(ana).balance, 37, "Daily soma nos pontos do rank");
+  assertEqual(rank.getRoulettePrize(() => 0).points, 0, "Roleta sorteia primeiro prêmio");
+  assertEqual(rank.getRoulettePrize(() => 0.999).points, 100, "Roleta sorteia último prêmio");
+  const roulette = rank.claimRoulette({ groupId: groupA, participantId: ana, displayName: "Ana", now: 100000, random: () => 0.999 });
+  assertEqual(roulette.ok, true, "Roleta diária resgata pontos");
+  assertEqual(roulette.points, 100, "Roleta aplica prêmio sorteado");
+  assertEqual(rank.claimRoulette({ groupId: groupA, participantId: ana, displayName: "Ana", now: 101000, random: () => 0.999 }).reason, "cooldown", "Roleta tem cooldown próprio");
+  assertEqual(rank.getUserWallet(ana).balance, 137, "Roleta soma nos pontos do rank");
+  const rouletteDev = rank.claimRoulette({ groupId: groupA, participantId: ana, displayName: "Ana", now: 102000, random: () => 0.999, ignoreCooldown: true });
+  assertEqual(rouletteDev.ok, true, "Roleta dev ignora cooldown");
+  assertEqual(rank.getUserWallet(ana).balance, 237, "Roleta dev soma pontos sem cooldown");
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("👤 PERFIL"), "Formata perfil");
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("Tag: 💎 Aura Diamante"), "Perfil mostra tag equipada");
   assert(rank.formatUserProfile({ groupId: groupA, participantId: ana, displayName: "Ana" }).includes("Level:"), "Perfil mostra level");
@@ -671,12 +876,20 @@ function testRankHelpers() {
   assertEqual(levelUp.levelUp.level, 2, "Detecta level up");
   rank.addRankPoints({ groupId: groupC, participantId: levelUser, displayName: "Level", points: 50, now: 61100 });
   assertEqual(rank.getUserWallet(levelUser).balance, 150, "Dev adiciona XP");
-  assertEqual(rank.removeRankPoints(levelUser, 25).ok, true, "Dev remove XP");
-  assertEqual(rank.getUserWallet(levelUser).balance, 125, "XP removido atualiza saldo");
-  rank.setRankPoints({ groupId: groupC, participantId: levelUser, displayName: "Level", points: 500, now: 62100 });
-  assertEqual(rank.rankGroup(groupC)[0].points, 500, "Dev seta XP no grupo");
-  rank.setRankPoints({ groupId: groupC, participantId: levelUser, displayName: "Level", points: 0, now: 63100 });
-  assertEqual(rank.rankGroup(groupC)[0].points, 0, "Dev reseta XP no grupo");
+  rank.addLevelXp({ groupId: groupC, participantId: levelUser, displayName: "Level", xp: 50, now: 62100 });
+  assertEqual(rank.getUserLevelXp(rank.getLevelStatsForContext(groupC, levelUser)), 200, "Dev adiciona XP separado");
+  assertEqual(rank.removeLevelXp({ groupId: groupC, participantId: levelUser, xp: 25 }).ok, true, "Dev remove XP separado");
+  assertEqual(rank.getUserWallet(levelUser).balance, 150, "XP removido não altera pontos do rank");
+  rank.setLevelXp({ groupId: groupC, participantId: levelUser, displayName: "Level", xp: 500, now: 63100 });
+  assertEqual(rank.getUserLevelXp(rank.getLevelStatsForContext(groupC, levelUser)), 500, "Dev seta XP no grupo");
+  rank.setLevelXp({ groupId: groupC, participantId: levelUser, displayName: "Level", xp: 0, now: 64100 });
+  assertEqual(rank.getUserLevelXp(rank.getLevelStatsForContext(groupC, levelUser)), 0, "Dev reseta XP no grupo");
+  rank.setRankPoints({ groupId: groupC, participantId: levelUser, displayName: "Level", points: 300, now: 64100 });
+  rank.addRankPoints({ groupId: groupC, participantId: "555555555555@s.whatsapp.net", displayName: "Outro", points: 200, now: 65100 });
+  assertEqual(rank.resetGroupLevel(groupC), true, "Dev reseta level do grupo inteiro");
+  assert(rank.rankGroup(groupC).some((item) => item.points > 0), "Reset level do grupo preserva pontos do rank");
+  assert(rank.rankLevelGroup(groupC).every((item) => item.levelInfo.totalXp === 0), "Reset level do grupo zera só XP");
+  assert(rank.isRankEnabled(groupC), "Reset level do grupo mantém rank ativo");
   rank.resetGroupRank(groupC);
   rank.setRankEnabled(groupC, false);
   assert(rank.formatRankHelp().includes(".rank global"), "Ajuda explica variações");
@@ -756,7 +969,7 @@ function testConverterHelpers() {
   assert(cropped.endsWith("scale=512:512"), ".figcrop redimensiona vídeo após recortar");
 
   const exif = _private.createStickerExif();
-  assert(exif.includes(Buffer.from("t00m4ziow bot")), "EXIF contém autor");
+  assert(exif.includes(Buffer.from("╳ T00M4ZIOW BOT ╳")), "EXIF contém autor");
   assert(exif.includes(Buffer.from("Figurinhas do bot")), "EXIF contém pacote");
 
   const tinyWebp = Buffer.concat([
@@ -771,7 +984,7 @@ function testConverterHelpers() {
 }
 
 async function testServer() {
-  console.log("\n[12] Servidor QR");
+  console.log("\n[14] Servidor QR");
   const { startServer } = require("./lib/server");
   const server = await startServer(0, () => ({ currentQR: null, status: "waiting" }));
 
@@ -793,6 +1006,8 @@ async function run() {
   testRankHelpers();
   testRecentMediaCache();
   testConverterHelpers();
+  testXboxDealsHelpers();
+  await testNvidiaAiHelpers();
   await testServer();
 
   console.log(`\n=== Resultado: ${passed} passaram, ${failed} falharam, ${skipped} pulados ===`);
@@ -803,3 +1018,4 @@ run().catch((err) => {
   console.error("[FATAL]", err);
   process.exit(1);
 });
+

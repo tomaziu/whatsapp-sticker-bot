@@ -3,3 +3,4 @@ session/
 data/
 logs/
 .mimocode/
+.env

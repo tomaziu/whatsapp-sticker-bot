@@ -19,10 +19,16 @@ module.exports = {
     textSticker: ".figtxt",
     raffle: ".sorteio",
     daily: ".daily",
+    roulette: ".roleta",
+    rouletteDev: ".roletadev",
     level: ".level",
     topLevel: ".toplevel",
     achievements: ".conquistas",
     profile: ".perfil",
+    xboxDeals: ".xboxpromo",
+    ai: ".ia",
+    aiOn: ".iaon",
+    aiOff: ".iaoff",
     statusBot: ".statusbo",
     errors: ".erros",
     maintenance: ".manutencao",
@@ -54,7 +60,7 @@ module.exports = {
     fps: 15,
     packId: "sticker-bot-local",
     packname: "Figurinhas do bot",
-    author: "t00m4ziow bot",
+    author: "╳ T00M4ZIOW BOT ╳",
     emojis: ["🤖"],
   },
 
@@ -100,6 +106,20 @@ module.exports = {
     },
   },
 
+  roulette: {
+    cooldownMs: 24 * 60 * 60 * 1000,
+    assetDir: "./assets/roulette",
+    prizes: [
+      { id: "0", points: 0, weight: 8 },
+      { id: "5", points: 5, weight: 20 },
+      { id: "10", points: 10, weight: 18 },
+      { id: "20", points: 20, weight: 14 },
+      { id: "35", points: 35, weight: 9 },
+      { id: "50", points: 50, weight: 5 },
+      { id: "100", points: 100, weight: 2 },
+    ],
+  },
+
   profileThemes: [
     { id: "neon", name: "💚 Neon", price: 5000, frame: "neon" },
     { id: "royal", name: "👑 Royal", price: 12000, frame: "royal" },
@@ -108,6 +128,27 @@ module.exports = {
   ],
 
   qrServerPort: 3000,
+
+  xboxDeals: {
+    url: "https://www.xbox.com/pt-BR/games/all-games?cat=onsale",
+    fallbackUrl: "https://www.xbox.com/pt-BR/promotions/sales/sales-and-specials",
+    cacheMs: 3 * 60 * 60 * 1000,
+    timeoutMs: 15000,
+    defaultLimit: 20,
+    maxLimit: 20,
+  },
+
+  ai: {
+    apiKeyEnv: "NVIDIA_API_KEY",
+    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+    model: "meta/llama-3.1-8b-instruct",
+    timeoutMs: 20000,
+    cooldownMs: 2 * 1000,
+    maxPromptChars: 900,
+    maxResponseChars: 1200,
+    maxTokens: 350,
+    temperature: 0.7,
+  },
 
   paths: {
     authInfo: "./session",

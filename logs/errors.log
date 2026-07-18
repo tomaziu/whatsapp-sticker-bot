@@ -6464,3 +6464,36 @@
 [2026-07-10 23:46:56] [WARN] Closing open session in favor of incoming prekey bundle
 [2026-07-10 23:46:56] [WARN] Closing open session in favor of incoming prekey bundle
 [2026-07-10 23:46:56] [WARN] Closing open session in favor of incoming prekey bundle
+[2026-07-18 02:29:44] [OK] ffmpeg detectado.
+[2026-07-18 02:29:45] [OK] ffmpeg detectado.
+[2026-07-18 02:29:45] [OK] WhatsApp Web v2.3000.1035194821
+[2026-07-18 02:29:46] [OK] QR Code gerado. Abra o navegador e escaneie.
+[2026-07-18 02:30:08] [OK] Reconectando em 5s (restartRequired)...
+[2026-07-18 02:30:13] [OK] ffmpeg detectado.
+[2026-07-18 02:30:13] [OK] WhatsApp Web v2.3000.1035194821
+[2026-07-18 02:30:15] [OK] Bot conectado. Pode testar com .menu ou .fig.
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:17] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:20] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:30:21] [OK] Mensagem recebida de 48450464161@s.whatsapp.net: fromMe sem mídia
+[2026-07-18 02:31:43] [OK] Mensagem recebida de 120363161718626867@g.us: fromUser sem mídia
+[2026-07-18 02:32:00] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia texto=".menu"
+[2026-07-18 02:32:00] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia texto="╭─❰ 📖 MENU ❱─╮
+
+  ✦ GERAL
+  ┃ 📜 .menu
+"
+[2026-07-18 02:32:12] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia texto=".roleta"
+[2026-07-18 02:32:12] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia texto="🎰 A roleta diária funciona dentro de gr"
+[2026-07-18 02:32:28] [OK] Mensagem recebida de 151333877371064@lid: fromUser imagem texto=".fig"
+[2026-07-18 02:32:29] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia
+[2026-07-18 02:32:29] [OK] Convertendo imagem de 151333877371064@lid
+[2026-07-18 02:32:30] [OK] Figurinha enviada para 151333877371064@lid
+[2026-07-18 02:32:30] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia
+[2026-07-18 02:32:30] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia
+[2026-07-18 02:33:09] [ERRO] Sessão inválida/desconectada. Sessão local apagada; gerando QR novo em seguida.
+[2026-07-18 02:33:09] [OK] Reconectando em 5s (logged_out)...
