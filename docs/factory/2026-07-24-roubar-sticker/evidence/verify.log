@@ -1,0 +1,8 @@
+$ npm test
+Resultado: 523 passaram, 0 falharam, 0 pulados.
+
+$ ssh VPS "cd /home/ubuntu/whatsapp-sticker-bot && npm test"
+Resultado: 523 passaram, 0 falharam, 0 pulados.
+
+$ pm2 restart sticker-bot
+Resultado: processo online; health principal connected com sessão ativa.
