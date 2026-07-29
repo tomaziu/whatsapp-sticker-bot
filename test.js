@@ -230,6 +230,11 @@ function testConfig() {
   assertEqual(config.commands.ai, ".ia", "Comando .ia ativo");
   assertEqual(config.commands.aiOn, ".iaon", "Comando .iaon ativo");
   assertEqual(config.commands.aiOff, ".iaoff", "Comando .iaoff ativo");
+  assertEqual(config.commands.diagnostic, ".diagnostico", "Comando .diagnostico ativo");
+  assertEqual(config.commands.backupRank, ".backuprank", "Comando .backuprank ativo");
+  assertEqual(config.commands.session, ".sessao", "Comando .sessao ativo");
+  assertEqual(config.commands.rankStatus, ".rankstatus", "Comando .rankstatus ativo");
+  assertEqual(config.commands.confirm, ".confirmar", "Comando .confirmar ativo");
   assertEqual(config.commands.stickerCrop, ".figcrop", "Comando .figcrop ativo");
   assertEqual(config.commands.stealSticker, ".roubar", "Comando .roubar ativo");
   assertEqual(config.commands.pinterestSticker, ".figpin", "Comando .figpin ativo");
@@ -326,6 +331,14 @@ async function testBotHelpers() {
   assert(!_private.isPersonalCommandLike(".fig"), "Bot completo não confunde ponto com pessoal");
   assert(_private.isStatusBotCommand(".statusbo"), ".statusbo reconhecido");
   assert(!_private.isStatusBotCommand(".statusbo teste"), ".statusbo exige comando exato");
+  assert(_private.isDiagnosticCommand(".diagnostico"), ".diagnostico reconhecido");
+  assert(!_private.isDiagnosticCommand(".diagnostico agora"), ".diagnostico exige comando exato");
+  assert(_private.isBackupRankCommand(".backuprank"), ".backuprank reconhecido");
+  assert(!_private.isBackupRankCommand(".backuprank agora"), ".backuprank exige comando exato");
+  assert(_private.isRankStatusCommand(".rankstatus"), ".rankstatus reconhecido");
+  assertEqual(_private.parseSessionCommand(".sessao status").action, "status", ".sessao status reconhecido");
+  assertEqual(_private.parseSessionCommand(".sessao").action, "invalid", ".sessao exige status");
+  assertEqual(_private.parseConfirmationCommand(".confirmar reiniciar").token, "reiniciar", ".confirmar reconhecido");
   assert(_private.isRaffleCommand(".sorteio"), ".sorteio reconhecido");
   assert(!_private.isRaffleCommand(".sorteio teste"), ".sorteio exige comando exato");
   assert(_private.isDailyCommand(".daily"), ".daily reconhecido");
@@ -432,6 +445,11 @@ async function testBotHelpers() {
   assert(_private.DEV_MENU_TEXT.includes(".iaoff"), "Menu dev mostra iaoff");
   assert(_private.DEV_MENU_TEXT.includes(".iaoff nologs"), "Menu dev mostra iaoff nologs");
   assert(_private.DEV_MENU_TEXT.includes(".reiniciar"), "Menu dev mostra reiniciar");
+  assert(_private.DEV_MENU_TEXT.includes(".diagnostico"), "Menu dev mostra diagnóstico");
+  assert(_private.DEV_MENU_TEXT.includes(".backuprank"), "Menu dev mostra backup do rank");
+  assert(_private.DEV_MENU_TEXT.includes(".sessao status"), "Menu dev mostra status da sessão");
+  assert(_private.DEV_MENU_TEXT.includes(".rankstatus"), "Menu dev mostra status do rank");
+  assert(_private.DEV_MENU_TEXT.includes(".confirmar"), "Menu dev explica confirmação");
   assert(!_private.DEV_MENU_TEXT.includes(".apagarmsg"), "Menu dev não mostra apagarmsg");
   assert(_private.DEV_MENU_TEXT.includes(".zerarrank global"), "Menu dev mostra zerarrank global");
   assert(_private.DEV_MENU_TEXT.includes(".removerank <nome/id>"), "Menu dev mostra removerank");
@@ -1081,8 +1099,203 @@ function testConverterHelpers() {
   assert(_private.getRgbTextColor(1, 2).startsWith("hsl("), "Gera cor RGB por frame");
 }
 
+async function testDevAdminHelpers() {
+  console.log("\n[14] Administração do dono");
+  const devAdmin = require("./lib/devAdmin");
+  const rank = require("./lib/rank");
+  const { _private } = require("./lib/bot");
+  const manager = devAdmin.createConfirmationManager({ ttlMs: 60000 });
+
+  const requested = manager.request("grupo@g.us", "restart", {}, 1000);
+  assertEqual(requested.token, "reiniciar", "Confirmação usa token da ação");
+  assertEqual(manager.confirm("outro@g.us", "reiniciar", 2000).reason, "missing", "Confirmação vale apenas no mesmo chat");
+  assertEqual(manager.confirm("grupo@g.us", "zerar-global", 2000).reason, "mismatch", "Confirmação rejeita outra ação");
+  assertEqual(manager.confirm("grupo@g.us", "reiniciar", 61000).reason, "expired", "Confirmação expira no limite");
+
+  manager.request("grupo@g.us", "reset_global_rank", { scope: "global" }, 1000);
+  const confirmed = manager.confirm("grupo@g.us", "zerar-global", 2000);
+  assertEqual(confirmed.ok, true, "Confirmação válida libera ação");
+  assertEqual(confirmed.pending.payload.scope, "global", "Confirmação preserva dados da ação");
+  assertEqual(manager.confirm("grupo@g.us", "zerar-global", 2001).reason, "missing", "Confirmação é usada uma única vez");
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "sticker-rank-backup-"));
+  const sourcePath = path.join(tempDir, "rank-stats.json");
+  const source = { groups: { "grupo@g.us": { users: {} } }, enabledGroups: { "grupo@g.us": true } };
+  fs.writeFileSync(sourcePath, JSON.stringify(source));
+  try {
+    const first = devAdmin.createRankBackup({ sourcePath, now: 1000 });
+    const second = devAdmin.createRankBackup({ sourcePath, now: 1000 });
+    assert(fs.existsSync(first.path), "Backup do rank cria arquivo");
+    assertEqual(JSON.stringify(JSON.parse(fs.readFileSync(first.path, "utf8"))), JSON.stringify(source), "Backup preserva JSON do rank");
+    assert(first.path !== second.path, "Backup nunca sobrescreve arquivo existente");
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+
+  const diagnostic = devAdmin.formatDiagnostic({
+    state: { status: "reconnecting", reconnectAttempts: 3, lastDisconnect: "timedOut" },
+    hasSession: false,
+    uptimeMs: 65000,
+    memoryRss: 10 * 1024 * 1024,
+  });
+  assert(diagnostic.includes("reconnecting"), "Diagnóstico mostra conexão");
+  assert(diagnostic.includes("Sem login"), "Diagnóstico mostra ausência de sessão");
+  assert(diagnostic.includes("timedOut"), "Diagnóstico mostra última queda");
+  assert(diagnostic.includes("1min 5s"), "Diagnóstico mostra uptime");
+
+  const sessionStatus = devAdmin.formatSessionStatus({
+    state: { status: "connected", reconnectAttempts: 0, lastDisconnect: null, currentQR: null },
+    hasSession: true,
+  });
+  assert(sessionStatus.includes("Login salvo"), "Status da sessão mostra login salvo");
+  assert(sessionStatus.includes("connected"), "Status da sessão mostra conexão");
+
+  const rankStatus = devAdmin.formatRankStatus({
+    summary: { activeGroups: 2, rankedUsers: 15 },
+    fileStatus: { exists: true, size: 2048, modifiedAt: "2026-07-29T12:00:00.000Z" },
+  });
+  assert(rankStatus.includes("Grupos ativos: 2"), "Rankstatus mostra grupos");
+  assert(rankStatus.includes("Usuários: 15"), "Rankstatus mostra usuários");
+  assert(rankStatus.includes("2.0 KB"), "Rankstatus mostra tamanho do arquivo");
+
+  const sentCalls = [];
+  _private.setSockForTests({
+    sendMessage: async (chatId, message) => {
+      sentCalls.push({ chatId, message });
+      return { key: { id: `owner-test-${sentCalls.length}` } };
+    },
+  });
+  for (const command of [".diagnostico", ".backuprank", ".sessao status", ".rankstatus", ".confirmar reiniciar"]) {
+    await _private.handleUtilityCommand("grupo@g.us", { key: { fromMe: false } }, command);
+  }
+  assertEqual(sentCalls.length, 0, "Outros usuários não executam comandos administrativos");
+  await _private.handleUtilityCommand("grupo@g.us", { key: { fromMe: true } }, ".diagnostico");
+  assertEqual(sentCalls.length, 1, "Dono executa comando administrativo");
+
+  _private.resetOwnerConfirmationsForTests();
+  rank.resetStatsForTests();
+  const protectedGroup = "120363999999999999@g.us";
+  const protectedUser = "5511999999999@s.whatsapp.net";
+  rank.startRank(protectedGroup, 1000);
+  rank.addRankPoints({
+    groupId: protectedGroup,
+    participantId: protectedUser,
+    displayName: "Protegido",
+    points: 50,
+    now: 2000,
+  });
+
+  const callsBeforeUnauthorizedDangerous = sentCalls.length;
+  for (const command of [".reiniciar", ".zerarrank", ".removerank Protegido"]) {
+    if (command === ".reiniciar") {
+      await _private.handleUtilityCommand(protectedGroup, { key: { fromMe: false } }, command);
+    } else {
+      await _private.handleRankCommand(protectedGroup, { key: { fromMe: false } }, command);
+    }
+  }
+  assertEqual(sentCalls.length, callsBeforeUnauthorizedDangerous, "Outros usuários não solicitam ações perigosas");
+  assertEqual(rank.rankGroup(protectedGroup)[0].points, 50, "Ações perigosas de terceiros não alteram o rank");
+
+  await _private.handleRankCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".zerarrank"
+  );
+  assertEqual(rank.rankGroup(protectedGroup)[0].points, 50, ".zerarrank não executa antes da confirmação");
+  assert(sentCalls.at(-1).message.text.includes(".confirmar zerar-grupo"), ".zerarrank informa confirmação correta");
+  await _private.handleUtilityCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".confirmar zerar-grupo"
+  );
+  assertEqual(rank.rankGroup(protectedGroup).length, 0, ".zerarrank executa após confirmação válida");
+
+  rank.addRankPoints({
+    groupId: protectedGroup,
+    participantId: protectedUser,
+    displayName: "Protegido",
+    points: 50,
+    now: 3000,
+  });
+  await _private.handleRankCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".removerank Protegido"
+  );
+  assert(rank.getGlobalUserStats(protectedUser), ".removerank preserva usuário antes da confirmação");
+  assert(sentCalls.at(-1).message.text.includes(".confirmar remover-rank"), ".removerank informa confirmação correta");
+  await _private.handleUtilityCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".confirmar remover-rank"
+  );
+  assertEqual(rank.getGlobalUserStats(protectedUser), null, ".removerank executa após confirmação válida");
+
+  await _private.handleUtilityCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".reiniciar"
+  );
+  assert(sentCalls.at(-1).message.text.includes(".confirmar reiniciar"), ".reiniciar aguarda confirmação");
+
+  _private.resetOwnerConfirmationsForTests();
+  rank.resetStatsForTests();
+  rank.startRank(protectedGroup, 4000);
+  rank.addRankPoints({
+    groupId: protectedGroup,
+    participantId: protectedUser,
+    displayName: "Protegido",
+    points: 2000,
+    now: 5000,
+  });
+  rank.grantTag(protectedUser, "vulto");
+  rank.claimDaily({
+    groupId: protectedGroup,
+    participantId: protectedUser,
+    displayName: "Protegido",
+    now: 6000,
+  });
+  await _private.handleRankCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".zerarrank global"
+  );
+  await _private.handleUtilityCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".confirmar zerar-global"
+  );
+  assertEqual(rank.rankGlobal().length, 0, "Reset global confirmado zera pontuação");
+  assert(rank.getOwnedTags(protectedUser).some((tag) => tag.id === "vulto"), "Reset global preserva tags");
+  assertEqual(
+    rank.claimDaily({
+      groupId: protectedGroup,
+      participantId: protectedUser,
+      displayName: "Protegido",
+      now: 7000,
+    }).reason,
+    "cooldown",
+    "Reset global preserva histórico do daily"
+  );
+
+  rank.resetStatsForTests();
+  const sourceBeforeBackup = JSON.stringify({ externalMarker: "preservar-origem" }, null, 2);
+  fs.writeFileSync(config.paths.rankStats, sourceBeforeBackup);
+  await _private.handleUtilityCommand(
+    protectedGroup,
+    { key: { fromMe: true, remoteJid: protectedGroup } },
+    ".backuprank"
+  );
+  assertEqual(fs.readFileSync(config.paths.rankStats, "utf8"), sourceBeforeBackup, ".backuprank não regrava o arquivo original");
+  const backupFilename = sentCalls.at(-1).message.text.match(/Arquivo: (.+)/)?.[1]?.trim();
+  if (backupFilename) {
+    try { fs.unlinkSync(path.join(path.dirname(config.paths.rankStats), "backups", backupFilename)); } catch {}
+  }
+  _private.setSockForTests(null);
+}
+
 async function testServer() {
-  console.log("\n[14] Servidor QR");
+  console.log("\n[15] Servidor QR");
   const { startServer } = require("./lib/server");
   const server = await startServer(0, () => ({ currentQR: null, status: "waiting" }));
 
@@ -1106,6 +1319,7 @@ async function run() {
   testConverterHelpers();
   testXboxDealsHelpers();
   await testNvidiaAiHelpers();
+  await testDevAdminHelpers();
   await testServer();
 
   console.log(`\n=== Resultado: ${passed} passaram, ${failed} falharam, ${skipped} pulados ===`);

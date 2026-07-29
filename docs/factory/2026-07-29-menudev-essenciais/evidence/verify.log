@@ -1,0 +1,21 @@
+Command: npm test --silent
+Exit code: 0
+Output: === Resultado: 578 passaram, 0 falharam, 0 pulados ===
+
+Command: node --check lib\bot.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: node --check lib\devAdmin.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: node --check lib\rank.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: git diff --check -- config.js lib\bot.js lib\devAdmin.js lib\rank.js test.js docs\factory\2026-07-29-menudev-essenciais\goal.md
+Exit code: 0
+Output: (no errors; line-ending warnings only)
+
+Independent read-only review: PASS after fixes.
