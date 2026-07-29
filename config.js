@@ -16,6 +16,14 @@ module.exports = {
     useTag: ".usartag",
     myTags: ".minhastags",
     removeTag: ".removertag",
+    gift: ".presente",
+    marriage: ".casamento",
+    marry: ".casar",
+    acceptMarriage: ".aceitarcasamento",
+    declineMarriage: ".recusarcasamento",
+    cancelMarriage: ".cancelarcasamento",
+    divorce: ".divorciar",
+    couple: ".casal",
     profileSticker: ".figpp",
     textSticker: ".figtxt",
     raffle: ".sorteio",
@@ -105,6 +113,14 @@ module.exports = {
       Lendária: 1,
       Exclusiva: 2,
     },
+  },
+
+  social: {
+    giftMinPoints: 10,
+    giftDailyLimit: 3,
+    marriageDailyBonus: 0.1,
+    marriageProposalTtlMs: 10 * 60 * 1000,
+    marriageCooldownMs: 3 * 24 * 60 * 60 * 1000,
   },
 
   roulette: {

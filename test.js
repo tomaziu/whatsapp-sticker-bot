@@ -241,6 +241,10 @@ function testConfig() {
   assertEqual(config.commands.daily, ".daily", "Comando .daily ativo");
   assertEqual(config.commands.roulette, ".roleta", "Comando .roleta ativo");
   assertEqual(config.commands.rouletteDev, ".roletadev", "Comando .roletadev ativo");
+  assertEqual(config.commands.gift, ".presente", "Comando .presente ativo");
+  assertEqual(config.commands.marriage, ".casamento", "Comando .casamento ativo");
+  assertEqual(config.commands.marry, ".casar", "Comando .casar ativo");
+  assertEqual(config.commands.acceptMarriage, ".aceitarcasamento", "Comando .aceitarcasamento ativo");
   assertEqual(config.commands.level, ".level", "Comando .level ativo");
   assertEqual(config.commands.topLevel, ".toplevel", "Comando .toplevel ativo");
   assertEqual(config.commands.achievements, ".conquistas", "Comando .conquistas ativo");
@@ -260,6 +264,9 @@ function testConfig() {
   assert(config.shop.tags.find((tag) => tag.id === "dev").hiddenFromShop, "Tag DEV fica oculta da loja");
   assert(config.shop.tags.find((tag) => tag.id === "entidade").price > config.shop.tags.find((tag) => tag.id === "vulto").price, "Tags avançadas são mais caras");
   assertEqual(config.daily.basePoints, 20, "Daily base configurado");
+  assertEqual(config.social.giftMinPoints, 10, "Presente tem mínimo configurado");
+  assertEqual(config.social.marriageDailyBonus, 0.1, "Casamento dá bônus daily");
+  assert(config.social.marriageCooldownMs > 0, "Casamento tem cooldown de separação");
   assert(config.roulette.prizes.some((prize) => prize.id === "100" && prize.points === 100), "Roleta tem prêmio de 100 pontos");
   assertEqual(config.shop.tags.find((tag) => tag.id === "entidade").dailyBonus, 1.2, "Tag mais cara dá bônus maior");
   assert(config.profileThemes.some((theme) => theme.id === "t00m" && theme.locked), "Tema exclusivo configurado");
@@ -373,8 +380,8 @@ async function testBotHelpers() {
   assertEqual(_private.parseMaintenanceCommand(".manutencao on nologs").silent, true, ".manutencao on nologs silencia aviso");
   assertEqual(_private.parseMaintenanceCommand(".manutencao").action, "status", ".manutencao mostra status");
   assertEqual(_private.parseMaintenanceCommand(".manutencao teste").action, "invalid", ".manutencao inválido");
-  assert(!_private.shouldClearSessionForDisconnect(DisconnectReason.loggedOut), "loggedOut preserva sessão local");
-  assert(!_private.shouldClearSessionForDisconnect(DisconnectReason.badSession), "badSession preserva sessão local");
+  assert(_private.shouldClearSessionForDisconnect(DisconnectReason.loggedOut), "loggedOut limpa sessão para gerar QR novo");
+  assert(_private.shouldClearSessionForDisconnect(DisconnectReason.badSession), "badSession limpa sessão para gerar QR novo");
   assert(!_private.shouldClearSessionForDisconnect(DisconnectReason.connectionClosed), "connectionClosed preserva sessão válida");
   assertEqual(_private.getAudioEffectCommand(".vozgrave"), "deepVoice", ".vozgrave reconhecido");
   assertEqual(_private.getAudioEffectCommand(".vozgrave teste"), null, ".vozgrave exige comando exato");
@@ -453,6 +460,8 @@ async function testBotHelpers() {
   assert(_private.MENU_TEXT.includes(".ia <texto>"), "Menu mostra ia");
   assert(_private.MENU_TEXT.includes(".daily"), "Menu mostra daily");
   assert(_private.MENU_TEXT.includes(".roleta"), "Menu mostra roleta");
+  assert(_private.MENU_TEXT.includes(".presente @user <pts>"), "Menu mostra presente");
+  assert(_private.MENU_TEXT.includes(".casamento"), "Menu mostra casamento");
   assert(!_private.MENU_TEXT.includes(".roletadev"), "Menu normal não mostra roletadev");
   assert(_private.MENU_TEXT.includes(".level"), "Menu mostra level");
   assert(_private.MENU_TEXT.includes(".conquistas"), "Menu mostra conquistas");
@@ -783,6 +792,13 @@ function testRankHelpers() {
   assertEqual(rank.parseShopCommand(".usartag dragao").type, "equip", ".usartag equipa tag");
   assertEqual(rank.parseShopCommand(".minhastags").type, "owned", ".minhastags lista tags");
   assertEqual(rank.parseShopCommand(".removertag").type, "unequip", ".removertag remove tag");
+  assertEqual(rank.parseGiftCommand(".presente @bia 50 parabéns").type, "gift", ".presente reconhecido");
+  assertEqual(rank.parseGiftCommand(".presente @bia 50 parabéns").amount, 50, ".presente lê quantidade");
+  assertEqual(rank.parseGiftCommand(".presente @bia").type, "invalid", ".presente exige pontos");
+  assertEqual(rank.parseMarriageCommand(".casamento").type, "help", ".casamento mostra ajuda");
+  assertEqual(rank.parseMarriageCommand(".casar @bia").type, "propose", ".casar reconhecido");
+  assertEqual(rank.parseMarriageCommand(".aceitarcasamento").type, "accept", ".aceitarcasamento reconhecido");
+  assertEqual(rank.parseMarriageCommand(".casal").type, "couple", ".casal reconhecido");
   assertEqual(rank.normalizeParticipantId(anaDevice), ana, "Normaliza participante pelo número");
   assert(!rank.isRankEnabled(groupA), "Rank começa desligado no grupo");
   assertEqual(rank.getMessageScore({ text: "oi" }), config.rank.points.text, "Texto pontua");
@@ -807,6 +823,43 @@ function testRankHelpers() {
   rank.addActivity({ groupId: groupA, participantId: bia, displayName: "Bia", points: 2, now: 30000 });
   rank.addActivity({ groupId: groupB, participantId: ana, displayName: "Ana", points: 3, now: 40000 });
   rank.addActivity({ groupId: groupA, participantId: ana, displayName: "Ana", points: 60000, now: 50000 });
+
+  const giftGroup = "120363-gift@g.us";
+  const donor = "555100000001@s.whatsapp.net";
+  const receiver = "555100000002@s.whatsapp.net";
+  rank.startRank(giftGroup, 51000);
+  rank.addRankPoints({ groupId: giftGroup, participantId: donor, displayName: "Doador", points: 100, now: 52000 });
+  const giftInsufficient = rank.sendGift({ groupId: giftGroup, fromId: receiver, fromName: "Recebe", toId: donor, toName: "Doador", amount: 999, now: 53000 });
+  assertEqual(giftInsufficient.reason, "insufficient", "Presente barra saldo insuficiente");
+  const donorBeforeGift = rank.getUserWallet(donor).balance;
+  const receiverBeforeGift = rank.getUserWallet(receiver).balance;
+  const giftOk = rank.sendGift({ groupId: giftGroup, fromId: donor, fromName: "Doador", toId: receiver, toName: "Recebe", amount: 50, message: "toma", now: 54000 });
+  assertEqual(giftOk.ok, true, "Presente transfere pontos");
+  assertEqual(rank.getUserWallet(donor).balance, donorBeforeGift - 50, "Presente desconta do doador");
+  assertEqual(rank.getUserWallet(receiver).balance, receiverBeforeGift + 50, "Presente soma no recebedor");
+  assertEqual(rank.sendGift({ groupId: giftGroup, fromId: donor, fromName: "Doador", toId: donor, toName: "Doador", amount: 10, now: 55000 }).reason, "self", "Presente bloqueia autoenvio");
+
+  const marriageGroup = "120363-marriage@g.us";
+  const noivo = "555200000001@s.whatsapp.net";
+  const noiva = "555200000002@s.whatsapp.net";
+  const curioso = "555200000003@s.whatsapp.net";
+  rank.startRank(marriageGroup, 56000);
+  rank.addRankPoints({ groupId: marriageGroup, participantId: noivo, displayName: "Noivo", points: 1, now: 57000 });
+  rank.addRankPoints({ groupId: marriageGroup, participantId: noiva, displayName: "Noiva", points: 1, now: 58000 });
+  assert(rank.formatMarriageHelp().includes(".casar @user"), "Ajuda de casamento explica casar");
+  const proposal = rank.createMarriageProposal({ groupId: marriageGroup, fromId: noivo, fromName: "Noivo", toId: noiva, toName: "Noiva", now: 59000 });
+  assertEqual(proposal.ok, true, "Cria pedido de casamento");
+  assertEqual(rank.acceptMarriage({ groupId: marriageGroup, participantId: curioso, displayName: "Curioso", now: 60000 }).reason, "no_proposal", "Só alvo aceita casamento");
+  const accepted = rank.acceptMarriage({ groupId: marriageGroup, participantId: noiva, displayName: "Noiva", now: 61000 });
+  assertEqual(accepted.ok, true, "Aceita casamento");
+  assertEqual(rank.getMarriageDailyBonusRate(marriageGroup, noivo), 0.1, "Casamento aplica bônus daily");
+  assertEqual(rank.getDailyReward(noivo, marriageGroup).points, 22, "Daily com casamento soma 10%");
+  assert(rank.formatMarriageInfo({ groupId: marriageGroup, participantId: noivo, displayName: "Noivo", now: 62000 }).includes("Noiva"), ".casal mostra par");
+  const divorce = rank.divorceMarriage({ groupId: marriageGroup, participantId: noivo, now: 63000 });
+  assertEqual(divorce.ok, true, "Divórcio separa casal");
+  assertEqual(rank.createMarriageProposal({ groupId: marriageGroup, fromId: noivo, fromName: "Noivo", toId: noiva, toName: "Noiva", now: 64000 }).reason, "cooldown", "Separação aplica cooldown");
+  rank.resetGroupRank(giftGroup);
+  rank.resetGroupRank(marriageGroup);
 
   const groupRank = rank.rankGroup(groupA);
   assertEqual(groupRank[0].displayName, "Ana", "Rank do grupo é separado");
