@@ -3,7 +3,6 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { DisconnectReason } = require("@whiskeysockets/baileys");
 const config = require("./config");
 
 config.paths.rankStats = path.join(os.tmpdir(), `sticker-rank-test-${process.pid}.json`);
@@ -301,9 +300,13 @@ function testConfig() {
 async function testBotHelpers() {
   console.log("\n[6] Bot e comandos");
   const { getState, startBot, _private } = require("./lib/bot");
+  const DisconnectReason = _private.DISCONNECT_REASON_CODES;
 
   assert(typeof startBot === "function", "startBot exportado");
   assert(typeof getState === "function", "getState exportado");
+  const baileys = await _private.loadBaileys();
+  assert(typeof baileys.default === "function", "Baileys ESM carregada");
+  assert(typeof baileys.useMultiFileAuthState === "function", "Auth state da Baileys carregado");
   assert(_private.isMenuCommand(" .MENU "), ".menu é case-insensitive");
   assert(_private.isDevMenuCommand(" .MENUDEV "), ".menudev é case-insensitive");
   assert(_private.isStickerCommand(" .FIG "), ".fig é case-insensitive");
