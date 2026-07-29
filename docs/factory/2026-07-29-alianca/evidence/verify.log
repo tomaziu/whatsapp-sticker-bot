@@ -1,0 +1,19 @@
+Command: npm test --silent
+Exit code: 0
+Output: === Resultado: 597 passaram, 0 falharam, 0 pulados ===
+
+Command: node --check config.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: node --check lib\bot.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: node --check lib\rank.js
+Exit code: 0
+Output: (no output; syntax valid)
+
+Command: rg -n -i "casamento|casar|casado|casal|divórcio|divorciar" config.js lib\bot.js lib\rank.js
+Exit code: 1
+Output: nenhum termo público antigo encontrado
