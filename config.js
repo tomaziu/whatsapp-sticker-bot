@@ -30,6 +30,10 @@ module.exports = {
     daily: ".daily",
     roulette: ".roleta",
     rouletteDev: ".roletadev",
+    redeem: ".resgatar",
+    inventory: ".inventario",
+    openBox: ".abrircaixa",
+    boxInfo: ".caixa",
     level: ".level",
     topLevel: ".toplevel",
     achievements: ".conquistas",
@@ -95,6 +99,21 @@ module.exports = {
   },
 
   shop: {
+    benefits: [
+      { id: "resgate", aliases: ["resgate turbo", "turbo"], name: "🎟️ Resgate Turbo", price: 500, type: "permanent" },
+      { id: "caixa", aliases: ["caixa misteriosa", "misteriosa"], name: "📦 Caixa Misteriosa", price: 300, type: "box", dailyLimit: 3 },
+    ],
+    mysteryBox: {
+      dailyLimit: 3,
+      prizes: [
+        { id: "points_50", type: "points", points: 50, name: "+50 pontos", weight: 38 },
+        { id: "points_100", type: "points", points: 100, name: "+100 pontos", weight: 27 },
+        { id: "points_250", type: "points", points: 250, name: "+250 pontos", weight: 16 },
+        { id: "extra_spin", type: "item", item: "extraSpin", amount: 1, name: "🎰 Giro Extra x1", weight: 12 },
+        { id: "point_magnet", type: "boost", item: "pointMagnet", durationMs: 2 * 60 * 60 * 1000, name: "🧲 Imã de Pontos 2h", weight: 6 },
+        { id: "jackpot_1000", type: "points", points: 1000, name: "💎 Jackpot +1000 pontos", weight: 1 },
+      ],
+    },
     tags: [
       { id: "vulto", name: "🌫️ Vulto do Chat", price: 1000, rarity: "Comum", dailyBonus: 0.1 },
       { id: "energia", name: "🧃 Energia Duvidosa", price: 2000, rarity: "Comum", dailyBonus: 0.12 },
