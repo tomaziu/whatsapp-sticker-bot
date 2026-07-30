@@ -258,12 +258,15 @@ function testConfig() {
   assertEqual(config.commands.achievements, ".conquistas", "Comando .conquistas ativo");
   assertEqual(config.commands.profile, ".perfil", "Comando .perfil ativo");
   assertEqual(config.commands.xboxDeals, ".xboxpromo", "Comando .xboxpromo ativo");
+  assertEqual(config.commands.tiktokDownload, ".tiktok", "Comando .tiktok ativo");
+  assertEqual(config.commands.instagramDownload, ".insta", "Comando .insta ativo");
   assertEqual(config.commands.ai, ".ia", "Comando .ia ativo");
   assertEqual(config.commands.shop, ".loja", "Comando .loja ativo");
   assertEqual(config.commands.errors, ".erros", "Comando .erros ativo");
   assertEqual(config.commands.maintenance, ".manutencao", "Comando .manutencao ativo");
   assertEqual(config.commands.restart, ".reiniciar", "Comando .reiniciar ativo");
   assertEqual(config.commands.deleteMessages, ".apagarmsg", "Comando .apagarmsg ativo");
+  assertEqual(config.paths.commandState, "./data/command-state.json", "Estado de comandos configurado");
   assertEqual(config.personalBot, undefined, "Bot pessoal removido");
   assertEqual(config.shop.tags.length, 11, "Loja tem 11 tags");
   assertEqual(new Set(config.shop.tags.filter((tag) => !tag.locked).map((tag) => tag.price)).size, 10, "Tags compráveis têm preços diferentes");
@@ -292,6 +295,10 @@ function testConfig() {
   assert(config.bot.reconnectMaxMs >= config.bot.reconnectMinMs, "Reconexão máxima configurada");
   assert(config.xboxDeals.url.includes("xbox.com/pt-BR"), "Xbox promo usa região Brasil");
   assert(config.xboxDeals.cacheMs > 0, "Xbox promo usa cache");
+  assertEqual(config.socialDownload.maxDurationSec, 180, "Download social limita duração");
+  assertEqual(config.socialDownload.maxDownloadMB, 50, "Download social limita tamanho baixado");
+  assertEqual(config.socialDownload.userCooldownMs, 10000, "Download social usa cooldown de 10s");
+  assert(config.socialDownload.timeoutMs > 0, "Download social usa timeout");
   assert(config.ai.endpoint.includes("integrate.api.nvidia.com"), "IA usa endpoint NVIDIA");
   assert(config.ai.maxPromptChars > 0, "IA limita prompt");
   assertEqual(config.ai.model, "meta/llama-3.1-8b-instruct", "IA usa modelo rápido e mais inteligente");
@@ -346,6 +353,10 @@ async function testBotHelpers() {
   assertEqual(_private.parseSessionCommand(".sessao status").action, "status", ".sessao status reconhecido");
   assertEqual(_private.parseSessionCommand(".sessao").action, "invalid", ".sessao exige status");
   assertEqual(_private.parseConfirmationCommand(".confirmar reiniciar").token, "reiniciar", ".confirmar reconhecido");
+  assertEqual(_private.parseCommandControlCommand(".cmd off downloads").type, "off", ".cmd off reconhecido");
+  assertEqual(_private.parseCommandControlCommand(".cmd on downloads").type, "on", ".cmd on reconhecido");
+  assertEqual(_private.parseCommandControlCommand(".cmd status").type, "status", ".cmd status reconhecido");
+  assertEqual(_private.parseCommandControlCommand(".cmd off").type, "invalid", ".cmd valida argumentos");
   assert(_private.isRaffleCommand(".sorteio"), ".sorteio reconhecido");
   assert(!_private.isRaffleCommand(".sorteio teste"), ".sorteio exige comando exato");
   assert(_private.isDailyCommand(".daily"), ".daily reconhecido");
@@ -369,6 +380,13 @@ async function testBotHelpers() {
   assertEqual(_private.parseXboxDealsCommand(".xboxpromo").limit, 20, ".xboxpromo mostra 20 jogos");
   assertEqual(_private.parseXboxDealsCommand(".xboxpromo 10").type, "invalid", ".xboxpromo não aceita limite");
   assertEqual(_private.parseXboxDealsCommand(".xboxpromo teste").type, "invalid", ".xboxpromo valida argumentos");
+  assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").type, "download", ".tiktok reconhecido");
+  assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").mode, "video", ".tiktok baixa vídeo por padrão");
+  assertEqual(_private.parseSocialDownloadCommand(".tiktok audio https://www.tiktok.com/@a/video/123").mode, "audio", ".tiktok audio reconhecido");
+  assertEqual(_private.parseSocialDownloadCommand(".insta https://www.instagram.com/reel/abc/").provider, "instagram", ".insta reconhecido");
+  assertEqual(_private.parseSocialDownloadCommand(".insta audio https://www.instagram.com/reel/abc/").mode, "audio", ".insta audio reconhecido");
+  assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.instagram.com/reel/abc/").type, "wrong_provider", ".tiktok recusa link do Instagram");
+  assertEqual(_private.parseSocialDownloadCommand(".insta").type, "invalid", ".insta exige link");
   assertEqual(_private.parseAiCommand(".ia olá bot").type, "ask", ".ia reconhecido");
   assertEqual(_private.parseAiCommand(".ia").type, "missing", ".ia exige texto");
   assertEqual(_private.parseAiControlCommand(".iaon").action, "on", ".iaon reconhecido");
@@ -448,6 +466,9 @@ async function testBotHelpers() {
   assert(_private.DEV_MENU_TEXT.includes(".erros"), "Menu dev mostra erros");
   assert(_private.DEV_MENU_TEXT.includes(".manutencao on/off/status"), "Menu dev mostra manutenção");
   assert(_private.DEV_MENU_TEXT.includes(".manutencao on nologs"), "Menu dev mostra manutenção silenciosa");
+  assert(_private.DEV_MENU_TEXT.includes(".cmd off <alvo>"), "Menu dev mostra desligar comando");
+  assert(_private.DEV_MENU_TEXT.includes(".cmd on <alvo>"), "Menu dev mostra ligar comando");
+  assert(_private.DEV_MENU_TEXT.includes(".cmd status"), "Menu dev mostra status de comandos");
   assert(_private.DEV_MENU_TEXT.includes(".iaon"), "Menu dev mostra iaon");
   assert(_private.DEV_MENU_TEXT.includes(".iaoff"), "Menu dev mostra iaoff");
   assert(_private.DEV_MENU_TEXT.includes(".iaoff nologs"), "Menu dev mostra iaoff nologs");
@@ -482,6 +503,10 @@ async function testBotHelpers() {
   assert(_private.MENU_TEXT.includes(".toimg"), "Menu mostra toimg");
   assert(_private.MENU_TEXT.includes(".sorteio"), "Menu mostra sorteio");
   assert(_private.MENU_TEXT.includes(".xboxpromo"), "Menu mostra xboxpromo");
+  assert(_private.MENU_TEXT.includes(".tiktok <link>"), "Menu mostra tiktok");
+  assert(_private.MENU_TEXT.includes(".tiktok audio <link>"), "Menu mostra tiktok audio");
+  assert(_private.MENU_TEXT.includes(".insta <link>"), "Menu mostra insta");
+  assert(_private.MENU_TEXT.includes(".insta audio <link>"), "Menu mostra insta audio");
   assert(_private.MENU_TEXT.includes(".ia <texto>"), "Menu mostra ia");
   assert(_private.MENU_TEXT.includes(".daily"), "Menu mostra daily");
   assert(_private.MENU_TEXT.includes(".roleta"), "Menu mostra roleta");
@@ -537,6 +562,20 @@ async function testBotHelpers() {
   assertEqual(_private.formatMaintenanceBlockMessage(), "", "Manutenção silenciosa não avisa");
   assert(_private.formatStatusBot().includes("Manutenção: ativada silenciosa"), "Status mostra manutenção silenciosa");
   _private.resetMaintenanceForTests();
+  _private.resetCommandControlForTests();
+  assert(_private.handleCommandControlCommand({ type: "off", target: "downloads" }).includes("desativado"), "Desativa grupo de comandos");
+  assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, ".tiktok https://www.tiktok.com/@a/video/123", null), "Comando desativado bloqueia usuário");
+  assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, "", { caption: ".insta https://www.instagram.com/reel/abc/" }), "Comando desativado bloqueia legenda");
+  assert(!_private.shouldBlockForCommandControl({ key: { fromMe: true } }, ".tiktok https://www.tiktok.com/@a/video/123", null), "Dono não é bloqueado por comando desativado");
+  assert(_private.handleCommandControlCommand({ type: "status" }).includes("Downloads"), ".cmd status mostra bloqueios");
+  assert(_private.formatStatusBot().includes("Comandos desativados: 1"), "Status mostra comandos desativados");
+  assert(_private.handleCommandControlCommand({ type: "on", target: "downloads" }).includes("ativado"), "Reativa grupo de comandos");
+  assert(!_private.shouldBlockForCommandControl({ key: { fromMe: false } }, ".tiktok https://www.tiktok.com/@a/video/123", null), "Comando reativado libera usuário");
+  assert(_private.handleCommandControlCommand({ type: "off", target: ".ia" }).includes(".ia desativado"), "Desativa comando individual");
+  assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, ".ia oi", null), "Comando individual desativado bloqueia usuário");
+  assert(_private.handleCommandControlCommand({ type: "invalid" }).includes(".cmd off"), ".cmd inválido explica uso");
+  assert(_private.handleCommandControlCommand({ type: "off", target: "nada" }).includes("Não encontrei"), ".cmd avisa alvo inválido");
+  _private.resetCommandControlForTests();
   _private.rememberRecentMessage({ key: { remoteJid: "grupo-delete@g.us", id: "msg-1", participant: "a@s.whatsapp.net" } });
   _private.rememberRecentMessage({ key: { remoteJid: "grupo-delete@g.us", id: "msg-2", participant: "b@s.whatsapp.net" } });
   _private.rememberRecentMessage({ key: { remoteJid: "grupo-delete@g.us", id: "cmd-delete", fromMe: true } });
@@ -626,8 +665,25 @@ function testXboxDealsHelpers() {
   assertEqual(xboxDeals.parseXboxDealsCommand(".xboxpromo abc").type, "invalid", "Parser rejeita texto extra");
 }
 
+function testSocialDownloaderHelpers() {
+  console.log("\n[13] Downloads sociais");
+  const socialDownloader = require("./lib/socialDownloader");
+
+  assertEqual(socialDownloader.getProviderFromUrl("https://www.tiktok.com/@a/video/123"), "tiktok", "Detecta TikTok");
+  assertEqual(socialDownloader.getProviderFromUrl("https://vm.tiktok.com/abc"), "tiktok", "Detecta TikTok curto");
+  assertEqual(socialDownloader.getProviderFromUrl("https://www.instagram.com/reel/abc/"), "instagram", "Detecta Instagram");
+  assertEqual(socialDownloader.getProviderFromUrl("https://example.com/a"), "", "Recusa provedor desconhecido");
+  assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").mode, "video", "TikTok padrão é vídeo");
+  assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok audio https://www.tiktok.com/@a/video/123").mode, "audio", "TikTok audio baixa áudio");
+  assertEqual(socialDownloader.parseSocialDownloadCommand(".insta video https://www.instagram.com/reel/abc/").mode, "video", "Instagram video reconhecido");
+  assertEqual(socialDownloader.parseSocialDownloadCommand(".insta https://www.tiktok.com/@a/video/123").type, "wrong_provider", "Instagram recusa TikTok");
+  assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok").type, "invalid", "Download exige link");
+  assertEqual(socialDownloader._private.validateInfo({ duration: 181 }).reason, "duration", "Bloqueia vídeo acima do limite");
+  assertEqual(socialDownloader._private.validateInfo({ duration: 180 }).ok, true, "Aceita vídeo no limite");
+}
+
 async function testNvidiaAiHelpers() {
-  console.log("\n[13] IA NVIDIA");
+  console.log("\n[14] IA NVIDIA");
   const nvidiaAi = require("./lib/nvidiaAi");
   nvidiaAi.resetAiForTests();
 
@@ -1338,6 +1394,7 @@ async function run() {
   testRecentMediaCache();
   testConverterHelpers();
   testXboxDealsHelpers();
+  testSocialDownloaderHelpers();
   await testNvidiaAiHelpers();
   await testDevAdminHelpers();
   await testServer();

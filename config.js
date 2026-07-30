@@ -35,6 +35,8 @@ module.exports = {
     achievements: ".conquistas",
     profile: ".perfil",
     xboxDeals: ".xboxpromo",
+    tiktokDownload: ".tiktok",
+    instagramDownload: ".insta",
     ai: ".ia",
     aiOn: ".iaon",
     aiOff: ".iaoff",
@@ -160,6 +162,16 @@ module.exports = {
     maxLimit: 20,
   },
 
+  socialDownload: {
+    maxDurationSec: 3 * 60,
+    maxDownloadMB: 50,
+    maxSendVideoMB: 20,
+    maxSendAudioMB: 15,
+    timeoutMs: 90 * 1000,
+    userCooldownMs: 10 * 1000,
+    queueBusyMessage: "📥 Já estou baixando um vídeo. Tente de novo em alguns segundos.",
+  },
+
   ai: {
     apiKeyEnv: "NVIDIA_API_KEY",
     endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -176,5 +188,6 @@ module.exports = {
     authInfo: "./session",
     dataDir: "./data",
     rankStats: "./data/rank-stats.json",
+    commandState: "./data/command-state.json",
   },
 };
