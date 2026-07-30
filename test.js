@@ -1044,6 +1044,14 @@ function testRankHelpers() {
   rank.buyShopItem(benefitUser, "caixa", { now: 106000 });
   const boxSpin = rank.openMysteryBox({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", now: 106000, random: () => 0.87 });
   assertEqual(boxSpin.prize.item, "extraSpin", "Caixa sorteia Giro Extra");
+  rank.buyShopItem(benefitUser, "caixa", { now: 106500 });
+  const boxMagnet = rank.openMysteryBox({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", now: 106500, random: () => 0.98 });
+  assertEqual(boxMagnet.prize.item, "pointMagnet", "Caixa sorteia Imã de Pontos");
+  assert(rank.formatInventory(benefitUser, 107000).includes("x2 ativo"), "Inventário mostra imã x2");
+  const magnetText = rank.addActivity({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", points: 1, now: 112000 });
+  assertEqual(magnetText.pointsGained, 2, "Imã dobra ponto de texto");
+  const magnetMedia = rank.addActivity({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", points: 2, activityType: "media", now: 118000 });
+  assertEqual(magnetMedia.pointsGained, 4, "Imã dobra ponto de mídia");
   const extraSpinRoulette = rank.claimRoulette({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", now: 107000, random: () => 0.999 });
   rank.claimRoulette({ groupId: groupA, participantId: benefitUser, displayName: "Benefício", now: 108000, random: () => 0.999 });
   assertEqual(extraSpinRoulette.ok, true, "Giro normal funciona antes do extra");
