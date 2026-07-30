@@ -1,4 +1,4 @@
-﻿const sharp = require("sharp");
+const sharp = require("sharp");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -992,7 +992,7 @@ function testRankHelpers() {
   assertEqual(rank.getRarityIcon("Lendária"), "🌟", "Loja usa ícone de raridade");
   assertEqual(rank.getTagByQuery("dragao").name, "🐉 Dragão do Zap", "Busca tag por id");
   assertEqual(rank.getBenefitByQuery("caixa").name, "📦 Caixa Misteriosa", "Busca benefício por id");
-  assert(rank.formatMysteryBoxInfo().includes("💎 Jackpot +1000 pontos — 1%"), ".caixa mostra chance do jackpot");
+  assert(rank.formatMysteryBoxInfo().includes("💎 Jackpot +3000 pontos — 1%"), ".caixa mostra chance do jackpot");
   assertEqual(rank.buyTag(ana, "dev").reason, "locked", "Tag DEV bloqueia usuário comum");
   assertEqual(rank.equipTag(ana, "dev").reason, "locked", "Tag DEV bloqueia equipar comum");
   assertEqual(rank.buyTag(ana, "dev", { allowLocked: true }).ok, true, "Dono compra tag DEV");

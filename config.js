@@ -107,11 +107,11 @@ module.exports = {
       dailyLimit: 3,
       prizes: [
         { id: "points_50", type: "points", points: 50, name: "+50 pontos", weight: 38 },
-        { id: "points_100", type: "points", points: 100, name: "+100 pontos", weight: 27 },
-        { id: "points_250", type: "points", points: 250, name: "+250 pontos", weight: 16 },
+        { id: "points_200", type: "points", points: 200, name: "+200 pontos", weight: 27 },
+        { id: "points_500", type: "points", points: 500, name: "+500 pontos", weight: 16 },
         { id: "extra_spin", type: "item", item: "extraSpin", amount: 1, name: "🎰 Giro Extra x1", weight: 12 },
         { id: "point_magnet", type: "boost", item: "pointMagnet", durationMs: 2 * 60 * 60 * 1000, name: "🧲 Imã de Pontos 2h", weight: 6 },
-        { id: "jackpot_1000", type: "points", points: 1000, name: "💎 Jackpot +1000 pontos", weight: 1 },
+        { id: "jackpot_3000", type: "points", points: 3000, name: "💎 Jackpot +3000 pontos", weight: 1 },
       ],
     },
     tags: [
