@@ -41,6 +41,7 @@ module.exports = {
     xboxDeals: ".xboxpromo",
     tiktokDownload: ".tiktok",
     instagramDownload: ".insta",
+    spotifyDownload: ".spotify",
     ai: ".ia",
     aiOn: ".iaon",
     aiOff: ".iaoff",
