@@ -196,8 +196,8 @@ module.exports = {
     userCooldownMs: 10 * 1000,
     queueBusyMessage: "📥 Já estou baixando um vídeo. Tente de novo em alguns segundos.",
     cookies: {
-      tiktok: "",      // Cole o conteúdo do cookies.txt do TikTok aqui (opcional)
-      instagram: "",   // Cole o conteúdo do cookies.txt do Instagram aqui (opcional)
+      tiktok: "",      // CAMINHO do arquivo cookies (ex: "./cookies/tiktok.txt") - NÃO o conteúdo
+      instagram: "",   // CAMINHO do arquivo cookies (ex: "./cookies/instagram.txt")
     },
   },
 
