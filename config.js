@@ -58,6 +58,10 @@ module.exports = {
       fastAudio: ".veloz",
       slowAudio: ".lento",
     },
+    redeem: ".resgatar",
+    inventory: ".inventario",
+    openBox: ".abrircaixa",
+    boxInfo: ".caixa",
   },
 
   bot: {
@@ -109,6 +113,23 @@ module.exports = {
       { id: "entidade", name: "🔥 Entidade Suprema", price: 70000, rarity: "Lendária", dailyBonus: 1.2 },
       { id: "dev", name: "👽 DEV", price: 0, rarity: "Exclusiva", dailyBonus: 2, locked: true, hiddenFromShop: true },
     ],
+    benefits: [
+      { id: "resgate", name: "🎟️ Resgate Turbo", price: 500, type: "permanent", description: "Resgata daily + roleta de uma vez" },
+      { id: "caixa", name: "📦 Caixa Misteriosa", price: 300, type: "box", dailyLimit: 3, description: "Abre para prêmios aleatórios" },
+    ],
+    mysteryBox: {
+      dailyLimit: 3,
+      prizes: [
+        { id: "points_50", name: "+50 pts", type: "points", points: 50, weight: 30 },
+        { id: "points_100", name: "+100 pts", type: "points", points: 100, weight: 20 },
+        { id: "points_200", name: "+200 pts", type: "points", points: 200, weight: 10 },
+        { id: "points_500", name: "+500 pts", type: "points", points: 500, weight: 5 },
+        { id: "extra_spin", name: "Giro Extra", type: "item", item: "extraSpin", amount: 1, weight: 24 },
+        { id: "point_magnet_1h", name: "Ímã de Pontos 1h", type: "boost", item: "pointMagnet", durationMs: 3600000, weight: 5 },
+        { id: "point_magnet_6h", name: "Ímã de Pontos 6h", type: "boost", item: "pointMagnet", durationMs: 21600000, weight: 5 },
+        { id: "jackpot", name: "💎 Jackpot +3000 pontos", type: "points", points: 3000, weight: 1 },
+      ],
+    },
   },
 
   daily: {

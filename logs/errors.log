@@ -6497,3 +6497,23 @@
 [2026-07-18 02:32:30] [OK] Mensagem recebida de 151333877371064@lid: fromUser sem mídia
 [2026-07-18 02:33:09] [ERRO] Sessão inválida/desconectada. Sessão local apagada; gerando QR novo em seguida.
 [2026-07-18 02:33:09] [OK] Reconectando em 5s (logged_out)...
+[2026-11-19 13:37:05] [OK] ffmpeg detectado.
+[2026-11-19 13:37:05] [OK] ffmpeg detectado.
+[2026-11-19 13:37:05] [OK] WhatsApp Web v2.3000.1043857760
+[2026-11-19 13:37:06] [OK] QR Code gerado. Abra o navegador e escaneie.
+[2026-11-19 13:40:41] [ERRO] Falha ao enviar teste citando mensagem; reenviando solto: quote falhou
+[2026-11-19 13:40:41] [OK] Backup do rank criado: C:\Users\teste123\AppData\Local\Temp\backups\rank-stats-20261119134041669.json
+[2026-11-19 13:41:24] [ERRO] Falha ao enviar teste citando mensagem; reenviando solto: quote falhou
+[2026-11-19 13:41:24] [OK] Backup do rank criado: C:\Users\teste123\AppData\Local\Temp\backups\rank-stats-20261119134124335.json
+[2026-11-19 13:42:26] [ERRO] Falha ao enviar teste citando mensagem; reenviando solto: quote falhou
+[2026-11-19 13:42:27] [OK] Backup do rank criado: C:\Users\teste123\AppData\Local\Temp\backups\rank-stats-20261119134227074.json
+[2026-11-19 13:43:45] [ERRO] Falha ao enviar teste citando mensagem; reenviando solto: quote falhou
+[2026-11-19 13:43:45] [OK] Backup do rank criado: C:\Users\teste123\AppData\Local\Temp\backups\rank-stats-20261119134345235.json
+[2026-11-19 13:43:55] [OK] ffmpeg detectado.
+[2026-11-19 13:43:55] [OK] ffmpeg detectado.
+[2026-11-19 13:43:56] [OK] WhatsApp Web v2.3000.1043857760
+[2026-11-19 13:43:57] [OK] QR Code gerado. Abra o navegador e escaneie.
+[2026-11-19 13:47:34] [OK] ffmpeg detectado.
+[2026-11-19 13:47:34] [OK] ffmpeg detectado.
+[2026-11-19 13:47:34] [OK] WhatsApp Web v2.3000.1043857760
+[2026-11-19 13:47:35] [OK] QR Code gerado. Abra o navegador e escaneie.
