@@ -36,7 +36,6 @@ module.exports = {
     profile: ".perfil",
     xboxDeals: ".xboxpromo",
     tiktokDownload: ".tiktok",
-    instagramDownload: ".insta",
     spotifyDownload: ".spotify",
     ai: ".ia",
     aiOn: ".iaon",
@@ -197,7 +196,6 @@ module.exports = {
     queueBusyMessage: "📥 Já estou baixando um vídeo. Tente de novo em alguns segundos.",
     cookies: {
       tiktok: "",      // CAMINHO do arquivo cookies (ex: "./cookies/tiktok.txt") - NÃO o conteúdo
-      instagram: "",   // CAMINHO do arquivo cookies (ex: "./cookies/instagram.txt")
     },
   },
 

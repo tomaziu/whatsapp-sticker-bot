@@ -263,7 +263,6 @@ function testConfig() {
   assertEqual(config.commands.profile, ".perfil", "Comando .perfil ativo");
   assertEqual(config.commands.xboxDeals, ".xboxpromo", "Comando .xboxpromo ativo");
   assertEqual(config.commands.tiktokDownload, ".tiktok", "Comando .tiktok ativo");
-  assertEqual(config.commands.instagramDownload, ".insta", "Comando .insta ativo");
   assertEqual(config.commands.ai, ".ia", "Comando .ia ativo");
   assertEqual(config.commands.shop, ".loja", "Comando .loja ativo");
   assertEqual(config.commands.errors, ".erros", "Comando .erros ativo");
@@ -396,10 +395,6 @@ async function testBotHelpers() {
   assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").type, "download", ".tiktok reconhecido");
   assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").mode, "video", ".tiktok baixa vídeo por padrão");
   assertEqual(_private.parseSocialDownloadCommand(".tiktok audio https://www.tiktok.com/@a/video/123").mode, "audio", ".tiktok audio reconhecido");
-  assertEqual(_private.parseSocialDownloadCommand(".insta https://www.instagram.com/reel/abc/").provider, "instagram", ".insta reconhecido");
-  assertEqual(_private.parseSocialDownloadCommand(".insta audio https://www.instagram.com/reel/abc/").mode, "audio", ".insta audio reconhecido");
-  assertEqual(_private.parseSocialDownloadCommand(".tiktok https://www.instagram.com/reel/abc/").type, "wrong_provider", ".tiktok recusa link do Instagram");
-  assertEqual(_private.parseSocialDownloadCommand(".insta").type, "invalid", ".insta exige link");
   assertEqual(_private.parseAiCommand(".ia olá bot").type, "ask", ".ia reconhecido");
   assertEqual(_private.parseAiCommand(".ia").type, "missing", ".ia exige texto");
   assertEqual(_private.parseAiControlCommand(".iaon").action, "on", ".iaon reconhecido");
@@ -518,8 +513,6 @@ async function testBotHelpers() {
   assert(_private.MENU_TEXT.includes(".xboxpromo"), "Menu mostra xboxpromo");
   assert(_private.MENU_TEXT.includes(".tiktok <link>"), "Menu mostra tiktok");
   assert(_private.MENU_TEXT.includes(".tiktok audio <link>"), "Menu mostra tiktok audio");
-  assert(_private.MENU_TEXT.includes(".insta <link>"), "Menu mostra insta");
-  assert(_private.MENU_TEXT.includes(".insta audio <link>"), "Menu mostra insta audio");
   assert(_private.MENU_TEXT.includes(".ia <texto>"), "Menu mostra ia");
   assert(_private.MENU_TEXT.includes(".daily"), "Menu mostra daily");
   assert(_private.MENU_TEXT.includes(".roleta"), "Menu mostra roleta");
@@ -582,7 +575,7 @@ async function testBotHelpers() {
   _private.resetCommandControlForTests();
   assert(_private.handleCommandControlCommand({ type: "off", target: "downloads" }).includes("desativado"), "Desativa grupo de comandos");
   assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, ".tiktok https://www.tiktok.com/@a/video/123", null), "Comando desativado bloqueia usuário");
-  assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, "", { caption: ".insta https://www.instagram.com/reel/abc/" }), "Comando desativado bloqueia legenda");
+  assert(_private.shouldBlockForCommandControl({ key: { fromMe: false } }, "", { caption: ".tiktok https://www.tiktok.com/@a/video/123" }), "Comando desativado bloqueia legenda");
   assert(!_private.shouldBlockForCommandControl({ key: { fromMe: true } }, ".tiktok https://www.tiktok.com/@a/video/123", null), "Dono não é bloqueado por comando desativado");
   assert(_private.handleCommandControlCommand({ type: "status" }).includes("Downloads"), ".cmd status mostra bloqueios");
   assert(_private.formatStatusBot().includes("Comandos desativados: 1"), "Status mostra comandos desativados");
@@ -688,12 +681,10 @@ function testSocialDownloaderHelpers() {
 
   assertEqual(socialDownloader.getProviderFromUrl("https://www.tiktok.com/@a/video/123"), "tiktok", "Detecta TikTok");
   assertEqual(socialDownloader.getProviderFromUrl("https://vm.tiktok.com/abc"), "tiktok", "Detecta TikTok curto");
-  assertEqual(socialDownloader.getProviderFromUrl("https://www.instagram.com/reel/abc/"), "instagram", "Detecta Instagram");
+  assertEqual(socialDownloader.getProviderFromUrl("https://www.instagram.com/reel/abc/"), "", "Instagram não suportado");
   assertEqual(socialDownloader.getProviderFromUrl("https://example.com/a"), "", "Recusa provedor desconhecido");
   assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok https://www.tiktok.com/@a/video/123").mode, "video", "TikTok padrão é vídeo");
   assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok audio https://www.tiktok.com/@a/video/123").mode, "audio", "TikTok audio baixa áudio");
-  assertEqual(socialDownloader.parseSocialDownloadCommand(".insta video https://www.instagram.com/reel/abc/").mode, "video", "Instagram video reconhecido");
-  assertEqual(socialDownloader.parseSocialDownloadCommand(".insta https://www.tiktok.com/@a/video/123").type, "wrong_provider", "Instagram recusa TikTok");
   assertEqual(socialDownloader.parseSocialDownloadCommand(".tiktok").type, "invalid", "Download exige link");
   assertEqual(socialDownloader._private.validateInfo({ duration: 181 }).reason, "duration", "Bloqueia vídeo acima do limite");
   assertEqual(socialDownloader._private.validateInfo({ duration: 180 }).ok, true, "Aceita vídeo no limite");
