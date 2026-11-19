@@ -3,5 +3,7 @@ session/
 session-personal/
 data/
 logs/
+tests/
+.planning/
 .mimocode/
 .env
