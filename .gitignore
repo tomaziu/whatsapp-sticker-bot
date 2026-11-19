@@ -4,6 +4,7 @@ session-personal/
 data/
 logs/
 tests/
+cookies/
 .planning/
 .mimocode/
 .env
