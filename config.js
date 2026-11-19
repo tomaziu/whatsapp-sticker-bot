@@ -52,6 +52,7 @@ module.exports = {
     restart: ".reiniciar",
     deleteMessages: ".apagarmsg",
     toImage: ".toimg",
+    onlyOwner: ".onlyowner",
     audioEffects: {
       deepVoice: ".vozgrave",
       thinVoice: ".vozfina",
@@ -67,6 +68,7 @@ module.exports = {
   bot: {
     name: "Sticker Bot",
     allowSelfMessages: true,
+    onlyOwner: false,
     browser: ["Sticker Bot", "Chrome", "1.0.0"],
     reconnectMinMs: 5000,
     reconnectMaxMs: 60000,
