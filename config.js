@@ -63,6 +63,7 @@ module.exports = {
     inventory: ".inventario",
     openBox: ".abrircaixa",
     boxInfo: ".caixa",
+    socialDiag: ".diagsocial",
   },
 
   bot: {
