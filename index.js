@@ -2,17 +2,19 @@
  * index.js — Ponto de entrada do Bot de Figurinhas
  *
  * Uso: npm start
- * QR Code: http://localhost:3000
+ * Autenticação: Código de pareamento (pairing code)
+ * Configure PAIRING_PHONE no .env ou config.js (ex: 5511999999999)
  */
 const { setupErrorFilter, log } = require("./lib/logger");
-const { startServer } = require("./lib/server");
-const { startBot, getState } = require("./lib/bot");
+const { startBot } = require("./lib/bot");
 const config = require("./config");
 
 async function main() {
   setupErrorFilter();
 
-  await startServer(config.qrServerPort || 3000, getState);
+  log("🤖 Iniciando bot com autenticação por código de pareamento...");
+  log(`📱 Número configurado: ${config.pairing?.phoneNumber || process.env.PAIRING_PHONE || "NÃO CONFIGURADO"}`);
+
   await startBot();
 }
 

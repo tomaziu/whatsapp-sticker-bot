@@ -52,6 +52,7 @@ module.exports = {
     deleteMessages: ".apagarmsg",
     toImage: ".toimg",
     onlyOwner: ".onlyowner",
+    pairing: ".parear",
     audioEffects: {
       deepVoice: ".vozgrave",
       thinVoice: ".vozfina",
@@ -216,5 +217,12 @@ module.exports = {
     dataDir: "./data",
     rankStats: "./data/rank-stats.json",
     commandState: "./data/command-state.json",
+  },
+
+  // Pairing code authentication (phone number with DDI+DDD, no +)
+  // Ex: 5511999999999 (Brasil DDI 55, DDD 11, número 999999999)
+  pairing: {
+    phoneNumber: process.env.PAIRING_PHONE || "",
+    enabled: true,
   },
 };
